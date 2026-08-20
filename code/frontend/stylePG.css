@@ -58,3 +58,10 @@ footer {
   padding: 1.5rem 1rem;
   font-size: 0.85rem;
 }
+
+.texto{
+  text-align: justify;
+  text-justify: inter-word;
+  padding: 6rem;
+
+}
