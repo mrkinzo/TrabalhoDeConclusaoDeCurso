@@ -20,6 +20,14 @@ body {
 .nav-link:hover {
   color: #555 !important;
 }
+.navbar .btn {
+  margin-top: 0.25rem;
+}
+@media (min-width: 992px) {
+  .navbar .btn {
+    margin-top: 0;
+  }
+}
 
 /* Black header */
 .site-header {
@@ -81,4 +89,78 @@ footer {
   text-align: center;
   padding: 1.5rem 1rem;
   font-size: 0.85rem;
+}
+
+/* Login / Registro */
+.auth-section {
+  padding: 4rem 1rem;
+  display: flex;
+  justify-content: center;
+}
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 2.5rem 2rem;
+  background: #fff;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.06);
+}
+.auth-card h2 {
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+}
+.auth-card .auth-subtitle {
+  color: #6c757d;
+  font-size: 0.9rem;
+  margin-bottom: 1.75rem;
+}
+.auth-card .form-label {
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+.auth-card .form-control {
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+}
+.auth-card .form-control:focus {
+  border-color: #1a1a1a;
+  box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.08);
+}
+.auth-card .btn-dark {
+  border-radius: 8px;
+  padding: 0.6rem;
+  font-weight: 600;
+}
+.auth-card .auth-switch {
+  text-align: center;
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+.auth-card .auth-switch a {
+  color: #1a1a1a;
+  font-weight: 600;
+  text-decoration: none;
+}
+.auth-card .auth-switch a:hover {
+  text-decoration: underline;
+}
+
+/*Home&About*/
+
+.texto{
+  text-align: center;
+  text-justify: inter-word;
+  margin-top: 2rem;
+  margin-left: 12rem;
+  margin-right: 12rem;
+}
+
+.texto2{
+  text-align: justify;
+  text-justify: inter-word;
+  padding: 6rem;
+  margin-left: 12rem;
+  margin-right: 12rem;
 }

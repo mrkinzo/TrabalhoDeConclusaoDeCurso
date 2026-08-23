@@ -8,15 +8,18 @@ body {
   background-color: #ffffff;
   border-bottom: 1px solid #eaeaea;
 }
+
 .navbar-brand {
   font-weight: 700;
   letter-spacing: 0.5px;
 }
+
 .nav-link {
   color: #1a1a1a !important;
   font-weight: 500;
   margin: 0 0.5rem;
 }
+
 .nav-link:hover {
   color: #555 !important;
 }
@@ -28,11 +31,13 @@ body {
   padding: 5rem 1rem;
   text-align: center;
 }
+
 .site-header h1 {
   color: #ffffff;
   font-weight: 700;
   letter-spacing: 1px;
 }
+
 .site-header p {
   color: #e6e6e6;
   max-width: 600px;
@@ -45,7 +50,7 @@ body {
   border-radius: 10px;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   padding: 1vw;
- allign-items: center;
+  allign-items: center;
   text-align: center;
   background-color: #fff;
   margin-bottom: 2rem;
@@ -59,9 +64,12 @@ footer {
   font-size: 0.85rem;
 }
 
-.texto{
+.texto {
   text-align: justify;
   text-justify: inter-word;
-  padding: 6rem;
+  margin-top: 4rem;
+  margin-bottom: 4rem;
+  margin-left: 14rem;
+  margin-right: 14rem;
 
 }
