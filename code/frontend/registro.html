@@ -17,15 +17,16 @@
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse justify-content-end" id="navMenu">
-      <ul class="navbar-nav">
-        <li class="nav-item"><a class="nav-link" href="IndexHome.html">Home</a></li>
-        <li class="nav-item"><a class="nav-link" href="index.html">Rochas</a></li>
-        <li class="nav-item"><a class="nav-link" href="indexMin.html">Minerais</a></li>
-        <li class="nav-item"><a class="nav-link" href="IndexAbout.html">Sobre o site</a></li>
-        <li class="nav-item ms-lg-2"><a class="btn btn-outline-dark btn-sm" href="login.html">Login</a></li>
-        <li class="nav-item ms-lg-2"><a class="btn btn-dark btn-sm active" href="registro.html">Registrar</a></li>
-      </ul>
-    </div>
+  <ul class="navbar-nav align-items-center">
+    <li class="nav-item"><a class="nav-link" href="IndexHome.html">Home</a></li>
+    <li class="nav-item"><a class="nav-link" href="index.html">Rochas</a></li>
+    <li class="nav-item"><a class="nav-link" href="indexMin.html">Minerais</a></li>
+    <li class="nav-item"><a class="nav-link" href="IndexAbout.html">Sobre o site</a></li>
+    
+    <!-- ponto de injeção -->
+    <li id="authMenu" class="d-flex align-items-center"></li>
+  </ul>
+</div>
   </div>
 </nav>
 
@@ -36,12 +37,14 @@
 </header>
 
 <!-- Main content -->
+<!-- Main content -->
 <main class="auth-section">
   <div class="auth-card">
     <h2>Registrar</h2>
     <p class="auth-subtitle">Preencha os campos abaixo para criar sua conta.</p>
 
-    <form>
+    <!-- 1. Adicionado o id="registerForm" -->
+    <form id="registerForm">
       <div class="mb-3">
         <label for="registroNome" class="form-label">Nome completo</label>
         <input type="text" class="form-control" id="registroNome" placeholder="Seu nome" required>
@@ -57,21 +60,21 @@
         <input type="password" class="form-control" id="registroSenha" placeholder="Crie uma senha" required>
       </div>
 
+      <!-- 2. Corrigido o ID para "professor" -->
       <div class="form-check mb-3">
-        <input class="form-check-input" type="checkbox" id="termos" required>
-        <label class="form-check-label" for="termos" style="font-size: 0.85rem;">
-         sou professor
+        <input class="form-check-input" type="checkbox" id="professor">
+        <label class="form-check-label" for="professor" style="font-size: 0.85rem;">
+         Sou professor
         </label>
       </div>
 
-
+      <!-- 2. Corrigido o ID para "redator" -->
       <div class="form-check mb-3">
-        <input class="form-check-input" type="checkbox" id="termos" required>
-        <label class="form-check-label" for="termos" style="font-size: 0.85rem;">
+        <input class="form-check-input" type="checkbox" id="redator">
+        <label class="form-check-label" for="redator" style="font-size: 0.85rem;">
          Desejo ser um redator do acervo.
         </label>
       </div>
-
 
       <button type="submit" class="btn btn-dark w-100">Criar conta</button>
     </form>
@@ -85,5 +88,8 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- 3. Adicionado o arquivo script.js -->
+<script type="module" src="script.js"></script>
+<script src="auth.js"></script>
 </body>
 </html>

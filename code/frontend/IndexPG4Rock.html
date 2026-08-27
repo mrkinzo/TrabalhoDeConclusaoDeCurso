@@ -18,16 +18,17 @@
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
       <span class="navbar-toggler-icon"></span>
     </button>
-    <div class="collapse navbar-collapse justify-content-end" id="navMenu">
-      <ul class="navbar-nav">
-        <li class="nav-item"><a class="nav-link active" href="IndexHome.html">Home</a></li>
-        <li class="nav-item"><a class="nav-link" href="index.html">Rochas</a></li>
-        <li class="nav-item"><a class="nav-link" href="indexMin.html">Minerais</a></li>
-        <li class="nav-item"><a class="nav-link" href="IndexAbout.html">Sobre o site</a></li>
-        <li class="nav-item ms-lg-2"><a class="btn btn-outline-dark btn-sm" href="../registroELogin/login.html">Login</a></li>
-        <li class="nav-item ms-lg-2"><a class="btn btn-dark btn-sm" href="../registroELogin/registro.html">Registrar</a></li>
-      </ul>
-    </div>
+     <div class="collapse navbar-collapse justify-content-end" id="navMenu">
+  <ul class="navbar-nav align-items-center">
+    <li class="nav-item"><a class="nav-link" href="IndexHome.html">Home</a></li>
+    <li class="nav-item"><a class="nav-link" href="index.html">Rochas</a></li>
+    <li class="nav-item"><a class="nav-link" href="indexMin.html">Minerais</a></li>
+    <li class="nav-item"><a class="nav-link" href="IndexAbout.html">Sobre o site</a></li>
+    
+    <!-- ponto de injeção -->
+    <li id="authMenu" class="d-flex align-items-center"></li>
+  </ul>
+</div>
   </div>
 </nav>
 
@@ -130,5 +131,6 @@
 
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="auth.js"></script>
   </body>
 </html>

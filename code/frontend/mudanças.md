@@ -16,5 +16,13 @@
 - auth.js
 - usuário
 
-* 
+<h2>server.js:</h2>
 
+    O servivdor faz a ligação entre o front-end e o banco de dados por meio de um JSON
+
+<h2>auth.js</h2>
+    Verifica em todas as páginas as permições do usuário, e verifica se este está logado, se não estiver, faz a injeção dos botões de login e registro, se o usuário estivar logado, injeta uma aba usuário (usuario.html), onde mostra as permições do usuário.
+
+
+<h2>script.js</h2>
+    Faz a comunicação entre o front e o servidor, onde envia os  dados do usuário para serem processados e guardados no DB. 

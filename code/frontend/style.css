@@ -152,15 +152,28 @@ footer {
 .texto{
   text-align: center;
   text-justify: inter-word;
+  max-width: 900px;
   margin-top: 2rem;
-  margin-left: 12rem;
-  margin-right: 12rem;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .texto2{
   text-align: justify;
   text-justify: inter-word;
-  padding: 6rem;
-  margin-left: 12rem;
-  margin-right: 12rem;
+  max-width: 900px;
+  padding: 2rem 1rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (max-width: 576px) {
+  .card-grid {
+    padding: 2rem 1rem;
+  }
+
+  .texto,
+  .texto2 {
+    max-width: 100%;
+  }
 }
