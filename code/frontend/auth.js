@@ -1,6 +1,6 @@
-document.addEventListener("DOMContentLoaded", async function() {
+document.addEventListener("DOMContentLoaded", async function () {
     const authMenu = document.getElementById('authMenu');
-    
+
     if (!authMenu) {
         console.error("ERRO: O elemento com id 'authMenu' não foi encontrado no HTML desta página!");
         return;
@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", async function() {
     if (usuarioLogado) {
         // --- SE ESTIVER LOGADO (Injeta o menu de usuário e cargos) ---
         let badgeCargo = '';
-        
+
         if (usuarioLogado.isAdmin) {
             badgeCargo = '<span class="badge bg-danger ms-1" style="font-size: 0.7rem;">Admin</span>';
         } else if (usuarioLogado.isRedator) {
@@ -54,7 +54,7 @@ document.addEventListener("DOMContentLoaded", async function() {
         // Evento para deslogar
         const btnLogout = document.getElementById('btnLogout');
         if (btnLogout) {
-            btnLogout.addEventListener('click', function(e) {
+            btnLogout.addEventListener('click', function (e) {
                 e.preventDefault();
                 localStorage.removeItem('usuarioId');
                 alert('Você saiu da sua conta.');
@@ -69,4 +69,23 @@ document.addEventListener("DOMContentLoaded", async function() {
             <li class="nav-item ms-lg-2"><a class="btn btn-dark btn-sm" href="registro.html">Registrar</a></li>
         `;
     }
+    const paginaAtual = window.location.pathname;
+        const paginasComBotao = ['index.html', 'indexMin.html'];
+        const mostrarBotao = paginasComBotao.some(pagina => paginaAtual.endsWith(pagina));
+
+        if ((usuarioLogado.isAdmin || usuarioLogado.isRedator) && mostrarBotao) {
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-dark';
+            btn.innerText = '+ Adicionar amostra';
+            btn.style.position = 'fixed';
+            btn.style.bottom = '30px';
+            btn.style.right = '30px';
+            btn.style.zIndex = '1000';
+
+            btn.addEventListener('click', () => {
+                window.location.href = "adicionar.html";
+            });
+
+            document.body.appendChild(btn);
+        }
 });

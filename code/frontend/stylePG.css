@@ -54,7 +54,12 @@ body {
   text-align: center;
   background-color: #fff;
   margin-bottom: 2rem;
-  
+  img {
+ width: 400px;
+  height: auto;
+  object-fit: cover; /* Crops the edges to fill the 200x200 box perfectly */
+}
+
 }
 
 footer {
