@@ -22,11 +22,11 @@ Consiste em uma plataforma web colaborativa e didática voltada à comunidade de
 
 ---
 
-## 📌 Sumário
+##  Sumário
 
 - [🪨 Studio - Acervo Virtual de Geociências (Rochas e Minerais)](#-studio---acervo-virtual-de-geociências-rochas-e-minerais)
   - [👥 Equipe do Projeto](#-equipe-do-projeto)
-  - [📌 Sumário](#-sumário)
+  - [Sumário](#sumário)
   - [📖 Sobre o Projeto](#-sobre-o-projeto)
   - [✨ Recursos Principais](#-recursos-principais)
   - [🏛️ Arquitetura do Sistema](#️-arquitetura-do-sistema)
