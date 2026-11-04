@@ -44,22 +44,44 @@ body {
   margin: 0.75rem auto 0;
 }
 
-.imagem {
-  position: relative;
+/* Carrossel de imagens das amostras */
+.carousel {
+  max-width: 600px;
+  width: 100%;
+  margin: 2.5rem auto 1.5rem;
+  border-radius: 12px;
   overflow: hidden;
-  border-radius: 10px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  padding: 1vw;
-  allign-items: center;
-  text-align: center;
-  background-color: #fff;
-  margin-bottom: 2rem;
-  img {
- width: 400px;
-  height: auto;
-  object-fit: cover; /* Crops the edges to fill the 200x200 box perfectly */
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  background-color: #000;
 }
 
+.carousel-inner .carousel-item img,
+.carousel-item img {
+  width: 100% !important;
+  height: 380px;
+  object-fit: cover;
+  display: block;
+}
+
+/* Compatibilidade caso exista a classe .imagem */
+.imagem {
+  max-width: 600px;
+  margin: 2.5rem auto 1.5rem;
+}
+
+/* Responsividade para telas menores e celulares */
+@media (max-width: 768px) {
+  .carousel,
+  .imagem {
+    max-width: 95%;
+    margin: 1.5rem auto;
+    border-radius: 8px;
+  }
+
+  .carousel-inner .carousel-item img,
+  .carousel-item img {
+    height: 250px;
+  }
 }
 
 footer {
@@ -70,12 +92,22 @@ footer {
   font-size: 0.85rem;
 }
 
-.texto {
+/* Texto descritivo da amostra centralizado e com largura de leitura agradável */
+.texto,
+.Texto {
+  max-width: 750px;
+  margin: 2rem auto 4rem;
+  padding: 0 1.5rem;
   text-align: justify;
   text-justify: inter-word;
-  margin-top: 4rem;
-  margin-bottom: 4rem;
-  margin-left: 14rem;
-  margin-right: 14rem;
+  line-height: 1.8;
+  color: #212529;
+}
 
+@media (max-width: 768px) {
+  .texto,
+  .Texto {
+    margin: 1.5rem auto 3rem;
+    padding: 0 1rem;
+  }
 }

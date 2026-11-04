@@ -62,5 +62,6 @@ document.getElementById('registerForm').addEventListener('submit', function(even
         submitBtn.innerText = 'Criar conta';
     });
 });
+ 
 
 export { UserData };

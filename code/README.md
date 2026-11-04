@@ -13,7 +13,7 @@ Consiste em uma plataforma web colaborativa e didática voltada à comunidade de
 
 ---
 
-## 👥 Equipe do Projeto
+##  Equipe do Projeto
 
 - **Desenvolvedor e Autor:** [Eduardo Kinzo Ishida](mailto:eduardokinzo@gmail.com) (Aluno / Administrador & Dev)
 - **Orientador e Curador do Acervo:** [Prof. Lineker Nunes](mailto:lineker.nunes@ifpr.edu.br) (Docente / Administrador)
@@ -25,7 +25,7 @@ Consiste em uma plataforma web colaborativa e didática voltada à comunidade de
 ##  Sumário
 
 - [🪨 Studio - Acervo Virtual de Geociências (Rochas e Minerais)](#-studio---acervo-virtual-de-geociências-rochas-e-minerais)
-  - [👥 Equipe do Projeto](#-equipe-do-projeto)
+  - [Equipe do Projeto](#equipe-do-projeto)
   - [Sumário](#sumário)
   - [📖 Sobre o Projeto](#-sobre-o-projeto)
   - [✨ Recursos Principais](#-recursos-principais)
