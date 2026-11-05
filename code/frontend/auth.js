@@ -83,39 +83,77 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    // Botão flutuante de adicionar amostra (para Administradores e Redatores)
+    // Painel flutuante de ações no catálogo (+ Adicionar, Editar e Remover)
     const paginaAtual = window.location.pathname;
     const paginasComBotao = ['index.html', 'indexMin.html', 'IndexHome.html'];
     const mostrarBotao = paginasComBotao.some(pagina => paginaAtual.endsWith(pagina));
 
     if (usuarioLogado && (usuarioLogado.isAdmin || usuarioLogado.isRedator) && mostrarBotao) {
-        const btnGroup = document.createElement('div');
-        btnGroup.className = 'btn-group dropup';
-        btnGroup.style.position = 'fixed';
-        btnGroup.style.bottom = '30px';
-        btnGroup.style.right = '30px';
-        btnGroup.style.zIndex = '1050';
+        const toolbar = document.createElement('div');
+        toolbar.className = 'floating-action-toolbar';
 
         // Determina destino rápido conforme a página atual
         let linkPadrao = 'adicionar.html';
         if (paginaAtual.endsWith('index.html')) linkPadrao = 'adicionarRocha.html';
         if (paginaAtual.endsWith('indexMin.html')) linkPadrao = 'adicionarMineral.html';
 
-        btnGroup.innerHTML = `
-            <a href="${linkPadrao}" class="btn btn-dark shadow-lg px-3 py-2 fw-semibold">
-                + Adicionar amostra
-            </a>
-            <button type="button" class="btn btn-dark dropdown-toggle dropdown-toggle-split shadow-lg" data-bs-toggle="dropdown" aria-expanded="false">
-                <span class="visually-hidden">Abrir menu</span>
+        toolbar.innerHTML = `
+            <!-- Botão Adicionar com Dropup -->
+            <div class="btn-group dropup">
+                <a href="${linkPadrao}" class="btn btn-dark fw-semibold" title="Adicionar nova amostra">
+                    + Adicionar
+                </a>
+                <button type="button" class="btn btn-dark dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="visually-hidden">Mais opções de adição</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow">
+                    <li><a class="dropdown-item py-2" href="adicionarRocha.html">Adicionar Rocha</a></li>
+                    <li><a class="dropdown-item py-2" href="adicionarMineral.html">Adicionar Mineral</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item py-2 text-muted" href="adicionar.html">Central de Adição</a></li>
+                </ul>
+            </div>
+
+            <!-- Botão Editar (Disponível para Administradores e Redatores) -->
+            <button type="button" id="btnAcaoEditar" class="btn btn-outline-dark fw-semibold bg-white" title="Selecionar amostra no catálogo para editar">
+                Editar
             </button>
-            <ul class="dropdown-menu dropdown-menu-end shadow">
-                <li><a class="dropdown-item py-2" href="adicionarRocha.html">Adicionar Rocha</a></li>
-                <li><a class="dropdown-item py-2" href="adicionarMineral.html">Adicionar Mineral</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item py-2 text-muted" href="adicionar.html">Central de Adição</a></li>
-            </ul>
+
+            <!-- Botão Remover (EXCLUSIVO PARA ADMINISTRADORES - Seleciona no catálogo para excluir) -->
+            ${usuarioLogado.isAdmin ? `
+                <button type="button" id="btnAcaoRemover" class="btn btn-danger fw-semibold" title="Selecionar amostra no catálogo para remover">
+                    Remover
+                </button>
+            ` : ''}
         `;
 
-        document.body.appendChild(btnGroup);
+        document.body.appendChild(toolbar);
+
+        // Evento do botão Editar
+        const btnEdit = document.getElementById('btnAcaoEditar');
+        if (btnEdit) {
+            btnEdit.addEventListener('click', () => {
+                if (typeof window.ativarModoSelecaoCatalogo === 'function') {
+                    window.ativarModoSelecaoCatalogo('editar');
+                } else {
+                    // Se estiver em IndexHome.html, direciona para o catálogo de rochas em modo edição
+                    const cat = confirm('Deseja editar amostras no Catálogo de Rochas?\n(Clique OK para Rochas ou Cancelar para Minerais)');
+                    window.location.href = cat ? 'index.html?modo=editar' : 'indexMin.html?modo=editar';
+                }
+            });
+        }
+
+        // Evento do botão Remover (Exclusivo Administrador)
+        const btnRem = document.getElementById('btnAcaoRemover');
+        if (btnRem) {
+            btnRem.addEventListener('click', () => {
+                if (typeof window.ativarModoSelecaoCatalogo === 'function') {
+                    window.ativarModoSelecaoCatalogo('remover');
+                } else {
+                    const cat = confirm('Deseja remover amostras no Catálogo de Rochas?\n(Clique OK para Rochas ou Cancelar para Minerais)');
+                    window.location.href = cat ? 'index.html?modo=remover' : 'indexMin.html?modo=remover';
+                }
+            });
+        }
     }
 });

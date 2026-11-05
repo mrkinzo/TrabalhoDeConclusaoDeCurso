@@ -68,6 +68,40 @@ async function initDatabase() {
             )
         `);
         console.log('Tabelas "amostras" e "amostra_imagens" verificadas/criadas com sucesso no banco.');
+
+        // Se a tabela estiver vazia, popula com as 6 rochas e 6 minerais do acervo
+        const [totalRows] = await pool.query('SELECT COUNT(*) as total FROM amostras');
+        if (totalRows[0].total === 0) {
+            console.log('Populando banco com as amostras iniciais do acervo...');
+            const seedAmostras = [
+                // Rochas
+                { categoria: 'rocha', nome: 'Basalto', tipo_rocha: 'Ignea', dureza: '6.0', imagem1: '../../basalto.jpg', imagem2: '../../basalto2.jpg', imagem3: '../../basalto3.jpg', descricao: 'O basalto é uma rocha magmática efusiva de composição máfica, rica em silicatos de magnésio e ferro e em plagioclásio cálcico.' },
+                { categoria: 'rocha', nome: 'Obsidiana', tipo_rocha: 'Ignea', dureza: '5.5', imagem1: '../../obisidiana1.jpg', imagem2: '../../obisidiana2.jpg', imagem3: '../../obisidiana3.jpg', descricao: 'A obsidiana é uma rocha ígnea extrusiva constituída quase inteiramente por vidro vulcânico negro ou cinza escuro, formada pelo resfriamento ultrarrápido da lava.' },
+                { categoria: 'rocha', nome: 'Calcario', tipo_rocha: 'Sedimentar', dureza: '3.0', imagem1: '../../calcario1.jpg', imagem2: '../../calcario2.jpg', imagem3: '../../calcario3.jpg', descricao: 'O calcário é uma rocha sedimentar constituída predominantemente por carbonato de cálcio sob a forma de calcita ou aragonita.' },
+                { categoria: 'rocha', nome: 'Arenito', tipo_rocha: 'Sedimentar', dureza: '6.5', imagem1: '../../arenito1.jpg', imagem2: '../../arenito2.jpg', imagem3: '../../arenito 3.jpg', descricao: 'O arenito é uma rocha sedimentar clástica resultante da compactação e cimentação de grãos de areia quartzoza.' },
+                { categoria: 'rocha', nome: 'Ardosia', tipo_rocha: 'Metamorfica', dureza: '3.5', imagem1: '../../ardosia1.jpg', imagem2: '../../ardosia2.jpg', imagem3: '../../ardosia 3.jpg', descricao: 'A ardósia é uma rocha metamórfica foliada de granulação fina, formada pelo metamorfismo regional de baixa intensidade sobre folhelhos ou argilitos.' },
+                { categoria: 'rocha', nome: 'Charnockito', tipo_rocha: 'Metamorfica', dureza: '6.0', imagem1: '../../charnokito1.jpg', imagem2: '../../charnokito2.jpg', imagem3: '../../charnokito3.jpg', descricao: 'O charnockito é uma rocha metamórfica de alto grau característica da fácies granulito, contendo ortopiroxênio associado a quartzo e feldspato.' },
+                // Minerais
+                { categoria: 'mineral', nome: 'Quartzo', grupo_mineral: 'Silicatos', padrao_geometrico: 'Hexagonal', clivagem: 'Fratura', dureza: '7.0', imagem1: '../../quartzo1.jpg', imagem2: '../../quartzo2.jpg', imagem3: '../../quartzo3.jpg', descricao: 'O quartzo é o mineral mais abundante da crosta continental (SiO2), caracterizado pela dureza 7 na escala de Mohs e ausência de clivagem.' },
+                { categoria: 'mineral', nome: 'Enxofre', grupo_mineral: 'Elementos nativos', padrao_geometrico: 'Ortorrômbico', clivagem: 'Fratura', dureza: '2.0', imagem1: '../../enxofre2.jpg', imagem2: '../../enxofre1.jpg', imagem3: '../../enxofre3.jpg', descricao: 'O enxofre nativo é um mineral amarelo brilhante, formado comumente por sublimação em regiões vulcânicas ou por alteração de sulfetos.' },
+                { categoria: 'mineral', nome: 'Opala', grupo_mineral: 'Silicatos', padrao_geometrico: 'Amorfo / Mineralóide', clivagem: 'Fratura', dureza: '5.5', imagem1: '../../opala1.jpg', imagem2: '../../opala2.jpg', imagem3: '../../opala3].jpg', descricao: 'A opala é um mineralóide de sílica amorfa hidratada, famosa pelo jogo de cores e reflexos iridescentes causados por esferas microscópicas de sílica.' },
+                { categoria: 'mineral', nome: 'Feldspato', grupo_mineral: 'Silicatos', padrao_geometrico: 'Monoclínico / Triclínico', clivagem: '2 direções', dureza: '6.0', imagem1: '../../feldspato1.jpg', imagem2: '../../feldspato2.jpg', imagem3: '../../feldspato3.jpg', descricao: 'Os feldspatos constituem a família de tectossilicatos mais abundante na crosta, com clivagem perfeita em dois sentidos quase perpendiculares.' },
+                { categoria: 'mineral', nome: 'Leopardita', grupo_mineral: 'Silicatos', padrao_geometrico: 'Criptocristalino', clivagem: 'Fratura', dureza: '6.5', imagem1: '../../leopardita 1.jpg', imagem2: '../../leopardita2.jpg', imagem3: '../../leopardita3.jpg', descricao: 'A leopardita é uma rocha/mineralóide constituída por pórfiro feldspático com manchas escuras de óxidos de ferro e manganês em padrão de pele de leopardo.' },
+                { categoria: 'mineral', nome: 'Halita', grupo_mineral: 'Haloides', padrao_geometrico: 'Cúbico (Isométrico)', clivagem: '3 direções', dureza: '2.5', imagem1: '../../halita1.jpg', imagem2: '../../halita2.jpg', imagem3: '../../halita3.jpg', descricao: 'A halita (NaCl) é o sal-gema comum, caracterizado por hábito cúbico cristalino perfeito, clivagem cúbica em 3 direções a 90 graus e sabor salgado.' }
+            ];
+
+            for (const s of seedAmostras) {
+                const [res] = await pool.query(
+                    `INSERT INTO amostras (categoria, nome, descricao, dureza, imagem1, imagem2, imagem3, tipo_rocha, padrao_geometrico, clivagem, grupo_mineral)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                    [s.categoria, s.nome, s.descricao, s.dureza, s.imagem1, s.imagem2, s.imagem3, s.tipo_rocha || null, s.padrao_geometrico || null, s.clivagem || null, s.grupo_mineral || null]
+                );
+                await pool.query('INSERT INTO amostra_imagens (amostra_id, url, ordem) VALUES (?, ?, ?)', [res.insertId, s.imagem1, 1]);
+                if (s.imagem2) await pool.query('INSERT INTO amostra_imagens (amostra_id, url, ordem) VALUES (?, ?, ?)', [res.insertId, s.imagem2, 2]);
+                if (s.imagem3) await pool.query('INSERT INTO amostra_imagens (amostra_id, url, ordem) VALUES (?, ?, ?)', [res.insertId, s.imagem3, 3]);
+            }
+            console.log('Catálogo inicial populado com sucesso no banco de dados!');
+        }
     } catch (err) {
         console.warn('Aviso ao inicializar tabelas:', err.message);
     }
