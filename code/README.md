@@ -220,13 +220,32 @@ Certifique-se de ter instalado em sua máquina:
        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
    );
 
-   CREATE TABLE IF NOT EXISTS items (
+   CREATE TABLE IF NOT EXISTS amostras (
        id INT AUTO_INCREMENT PRIMARY KEY,
-       title VARCHAR(255) NOT NULL,
-       description TEXT,
-       image_url VARCHAR(500) NOT NULL,
-       category ENUM('rocha', 'mineral', 'geral') DEFAULT 'geral',
-       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+       categoria ENUM('rocha', 'mineral') NOT NULL,
+       nome VARCHAR(255) NOT NULL,
+       descricao TEXT,
+       dureza VARCHAR(100),
+       imagem1 VARCHAR(500) NOT NULL,
+       imagem2 VARCHAR(500) DEFAULT NULL,
+       imagem3 VARCHAR(500) DEFAULT NULL,
+       tipo_rocha ENUM('Ignea', 'Sedimentar', 'Metamorfica') DEFAULT NULL,
+       padrao_geometrico VARCHAR(150) DEFAULT NULL,
+       clivagem VARCHAR(100) DEFAULT NULL,
+       grupo_mineral VARCHAR(150) DEFAULT NULL,
+       criado_por INT DEFAULT NULL,
+       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+       CONSTRAINT fk_amostras_usuario FOREIGN KEY (criado_por) REFERENCES users(id) ON DELETE SET NULL
+   );
+
+   CREATE TABLE IF NOT EXISTS amostra_imagens (
+       id INT AUTO_INCREMENT PRIMARY KEY,
+       amostra_id INT NOT NULL,
+       url VARCHAR(500) NOT NULL,
+       ordem INT DEFAULT 1,
+       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+       CONSTRAINT fk_amostra_imagens_amostra FOREIGN KEY (amostra_id) REFERENCES amostras(id) ON DELETE CASCADE
    );
    ```
 

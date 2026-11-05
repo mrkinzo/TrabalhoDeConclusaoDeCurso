@@ -233,14 +233,33 @@ erDiagram
         TIMESTAMP created_at "Data/hora de criação"
     }
 
-    ITEMS {
+    AMOSTRAS {
         INT id PK "Auto Increment"
-        VARCHAR title "Nome da amostra (ex: Basalto)"
-        TEXT description "Texto descritivo petrográfico/mineralógico"
-        VARCHAR image_url "Caminho da imagem principal"
-        ENUM category "rocha, mineral, geral"
+        ENUM categoria "rocha, mineral"
+        VARCHAR nome "Nome da amostra"
+        TEXT descricao "Texto descritivo petrográfico/mineralógico"
+        VARCHAR dureza "Dureza (ex: Mohs)"
+        VARCHAR imagem1 "Imagem principal (Card)"
+        VARCHAR imagem2 "Segunda foto do carrossel"
+        VARCHAR imagem3 "Terceira foto do carrossel"
+        ENUM tipo_rocha "Ignea, Sedimentar, Metamorfica"
+        VARCHAR padrao_geometrico "Padrão cristalino"
+        VARCHAR clivagem "1 a 6 direções ou fratura"
+        VARCHAR grupo_mineral "Grupo mineralógico"
+        INT criado_por FK "users.id ON DELETE SET NULL"
         TIMESTAMP created_at "Data de inclusão"
     }
+
+    AMOSTRA_IMAGENS {
+        INT id PK "Auto Increment"
+        INT amostra_id FK "amostras.id ON DELETE CASCADE"
+        VARCHAR url "URL da fotografia"
+        INT ordem "Ordem no carrossel"
+        TIMESTAMP created_at "Data de upload"
+    }
+
+    USERS ||--o{ AMOSTRAS : "cadastra"
+    AMOSTRAS ||--o{ AMOSTRA_IMAGENS : "possui (cascade delete)"
 ```
 
 ---

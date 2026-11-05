@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Studio - Editar Amostra</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="style.css" rel="stylesheet">
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg sticky-top">
+  <div class="container">
+    <a class="navbar-brand" href="IndexHome.html">STUDIO</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-end" id="navMenu">
+      <ul class="navbar-nav align-items-center">
+        <li class="nav-item"><a class="nav-link" href="IndexHome.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="index.html">Rochas</a></li>
+        <li class="nav-item"><a class="nav-link" href="indexMin.html">Minerais</a></li>
+        <li class="nav-item"><a class="nav-link" href="IndexAbout.html">Sobre o site</a></li>
+        <li id="authMenu" class="d-flex align-items-center"></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Black header -->
+<header class="site-header">
+  <h1 class="display-5">EDITAR AMOSTRA</h1>
+  <p id="headerSubtitulo">Carregando dados da amostra...</p>
+</header>
+
+<!-- Main content -->
+<main class="container py-5" style="max-width: 820px;">
+  <div class="card shadow-sm border-0 p-4 p-md-5" style="border-radius: 12px;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+      <div>
+        <span id="badgeCategoria" class="badge bg-dark mb-1">Categoria</span>
+        <h2 class="h4 mb-0 fw-bold" id="formTitulo">Editar Amostra</h2>
+      </div>
+      <button onclick="window.history.back()" class="btn btn-outline-secondary btn-sm">← Voltar</button>
+    </div>
+
+    <!-- Spinner de Carregamento -->
+    <div id="loadingBox" class="text-center py-5">
+      <div class="spinner-border" role="status"></div>
+      <p class="text-muted mt-2">Buscando amostra no banco de dados...</p>
+    </div>
+
+    <!-- Formulário Dinâmico -->
+    <form id="formEditar" class="d-none">
+
+      <!-- 1. Três Imagens com Preview e Substituição -->
+      <div class="mb-4">
+        <label class="form-label fw-bold d-block">Fotografias da Amostra (3 Imagens)</label>
+        <p class="text-muted small mb-3">
+          As fotos atuais estão carregadas abaixo. Clique em qualquer caixa caso queira substituí-las por uma nova imagem.
+        </p>
+
+        <div class="image-upload-grid">
+          
+          <!-- Imagem 1 (Card) -->
+          <div class="image-upload-box primary-card" onclick="document.getElementById('editImg1').click()">
+            <span class="image-badge-primary">Imagem 1 (Card do Catálogo) *</span>
+            <img id="previewImg1" class="preview-img" alt="Preview 1">
+            <small class="text-muted d-block mt-1">Clique para trocar</small>
+            <input type="file" id="editImg1" accept="image/*" class="d-none">
+          </div>
+
+          <!-- Imagem 2 -->
+          <div class="image-upload-box" onclick="document.getElementById('editImg2').click()">
+            <span class="badge bg-secondary mb-2">Imagem 2 (Carrossel)</span>
+            <img id="previewImg2" class="preview-img" alt="Preview 2">
+            <small class="text-muted d-block mt-1">Clique para trocar</small>
+            <input type="file" id="editImg2" accept="image/*" class="d-none">
+          </div>
+
+          <!-- Imagem 3 -->
+          <div class="image-upload-box" onclick="document.getElementById('editImg3').click()">
+            <span class="badge bg-secondary mb-2">Imagem 3 (Carrossel)</span>
+            <img id="previewImg3" class="preview-img" alt="Preview 3">
+            <small class="text-muted d-block mt-1">Clique para trocar</small>
+            <input type="file" id="editImg3" accept="image/*" class="d-none">
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 2. Nome da Amostra -->
+      <div class="mb-3">
+        <label for="editNome" class="form-label fw-bold">Nome da Amostra <span class="text-danger">*</span></label>
+        <input type="text" class="form-control form-control-lg" id="editNome" required>
+      </div>
+
+      <!-- 3. Dureza da Amostra -->
+      <div class="mb-3">
+        <label for="editDureza" class="form-label fw-bold">Dureza da Amostra</label>
+        <input type="text" class="form-control" id="editDureza">
+      </div>
+
+      <!-- Seção Específica para ROCHA -->
+      <div id="secaoRocha" class="d-none">
+        <div class="mb-3">
+          <label for="editTipoRocha" class="form-label fw-bold">
+            Tipo de Rocha <span class="text-danger">*</span>
+          </label>
+          <select class="form-select form-select-lg" id="editTipoRocha">
+            <!-- Opções preenchidas via picker.js -->
+          </select>
+        </div>
+      </div>
+
+      <!-- Seção Específica para MINERAL -->
+      <div id="secaoMineral" class="d-none">
+        <div class="mb-3">
+          <label for="editPadraoGeometrico" class="form-label fw-bold">Padrão Geométrico</label>
+          <input type="text" class="form-control" id="editPadraoGeometrico">
+        </div>
+
+        <div class="mb-3">
+          <label for="editClivagem" class="form-label fw-bold">Clivagem</label>
+          <select class="form-select" id="editClivagem">
+            <!-- Opções preenchidas via picker.js -->
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label for="editGrupoMineral" class="form-label fw-bold">
+            Grupo Específico do Mineral <span class="text-danger">*</span>
+          </label>
+          <select class="form-select form-select-lg" id="editGrupoMineral">
+            <!-- Opções preenchidas via picker.js -->
+          </select>
+        </div>
+      </div>
+
+      <!-- 4. Descrição da Amostra -->
+      <div class="mb-4">
+        <label for="editDescricao" class="form-label fw-bold">Descrição da Amostra</label>
+        <textarea class="form-control" id="editDescricao" rows="6"></textarea>
+      </div>
+
+      <!-- Botões de Ação -->
+      <div class="d-flex flex-wrap gap-3 justify-content-between align-items-center pt-3 border-top">
+        <div id="areaAdminExcluir">
+          <!-- Botão de exclusão exclusivo para Administradores -->
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="button" onclick="window.history.back()" class="btn btn-outline-secondary px-4">Cancelar</button>
+          <button type="submit" id="btnSalvarEdicao" class="btn btn-dark px-5 fw-bold">
+            Salvar Alterações
+          </button>
+        </div>
+      </div>
+
+    </form>
+  </div>
+</main>
+
+<footer>
+  &copy; 2026 Studio. All rights reserved.
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="picker.js"></script>
+<script src="auth.js"></script>
+
+<script>
+  let amostraAtual = null;
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const amostraId = urlParams.get('id');
+
+    if (!amostraId) {
+      alert('ID da amostra não informado.');
+      window.location.href = 'IndexHome.html';
+      return;
+    }
+
+    // Configura previews de substituição de imagens
+    configurarPreviewImagem('editImg1', 'previewImg1');
+    configurarPreviewImagem('editImg2', 'previewImg2');
+    configurarPreviewImagem('editImg3', 'previewImg3');
+
+    try {
+      const response = await fetch(`http://localhost:3000/api/amostras/${amostraId}`);
+      const data = await response.json();
+
+      if (!data.sucesso || !data.amostra) {
+        alert('Amostra não encontrada no banco de dados.');
+        window.location.href = 'IndexHome.html';
+        return;
+      }
+
+      amostraAtual = data.amostra;
+      carregarDadosNoFormulario(amostraAtual);
+
+    } catch (err) {
+      console.error('Erro ao buscar dados:', err);
+      alert('Erro ao carregar dados da amostra.');
+    }
+  });
+
+  // Preenche os campos do formulário conforme a categoria (Rocha ou Mineral)
+  function carregarDadosNoFormulario(item) {
+    document.getElementById('loadingBox').classList.add('d-none');
+    document.getElementById('formEditar').classList.remove('d-none');
+
+    document.getElementById('headerSubtitulo').innerText = `${item.categoria.toUpperCase()} - ${item.nome}`;
+    document.getElementById('formTitulo').innerText = `Editar ${item.nome}`;
+    document.getElementById('badgeCategoria').innerText = item.categoria.toUpperCase();
+
+    // Imagens
+    document.getElementById('previewImg1').src = item.imagem1 || 'https://via.placeholder.com/300x200?text=Sem+Foto';
+    document.getElementById('previewImg2').src = item.imagem2 || 'https://via.placeholder.com/300x200?text=Sem+Foto';
+    document.getElementById('previewImg3').src = item.imagem3 || 'https://via.placeholder.com/300x200?text=Sem+Foto';
+
+    // Campos comuns
+    document.getElementById('editNome').value = item.nome || '';
+    document.getElementById('editDureza').value = item.dureza || '';
+    document.getElementById('editDescricao').value = item.descricao || '';
+
+    // Categoria específica
+    if (item.categoria === 'rocha') {
+      document.getElementById('secaoRocha').classList.remove('d-none');
+      popularPicker('editTipoRocha', TIPOS_ROCHA, item.tipo_rocha || '', 'Selecione o tipo de rocha');
+    } else {
+      document.getElementById('secaoMineral').classList.remove('d-none');
+      document.getElementById('editPadraoGeometrico').value = item.padrao_geometrico || '';
+      popularPicker('editClivagem', OPCOES_CLIVAGEM, item.clivagem || '', 'Selecione a clivagem ou fratura');
+      popularPicker('editGrupoMineral', GRUPOS_MINERAIS, item.grupo_mineral || '', 'Selecione o grupo mineral');
+    }
+
+    // Configurar botão de exclusão apenas se for ADMIN
+    verificarBotaoExcluir();
+  }
+
+  function verificarBotaoExcluir() {
+    const usuarioLogado = window.usuarioLogado;
+    const areaAdmin = document.getElementById('areaAdminExcluir');
+    if (!areaAdmin || !amostraAtual) return;
+
+    if (usuarioLogado && usuarioLogado.isAdmin) {
+      areaAdmin.innerHTML = `
+        <button type="button" class="btn btn-outline-danger btn-sm" id="btnExcluirCascade">
+          Excluir Amostra (Cascade)
+        </button>
+      `;
+
+      document.getElementById('btnExcluirCascade').addEventListener('click', async () => {
+        const confirmar = confirm(`ATENÇÃO ADMINISTRADOR:\nTem certeza que deseja apagar permanentemente a amostra "${amostraAtual.nome}" do acervo?\n\nEsta ação excluirá todos os dados e imagens vinculadas do banco de dados em CASCATA.`);
+        if (!confirmar) return;
+
+        try {
+          const resp = await fetch(`http://localhost:3000/api/amostras/${amostraAtual.id}`, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ usuarioId: usuarioLogado.id })
+          });
+          const resData = await resp.json();
+
+          if (resData.sucesso) {
+            alert('Amostra e registros dependentes excluídos com sucesso em cascata.');
+            window.location.href = amostraAtual.categoria === 'rocha' ? 'index.html' : 'indexMin.html';
+          } else {
+            alert('Erro ao excluir amostra: ' + resData.mensagem);
+          }
+        } catch (e) {
+          console.error(e);
+          alert('Erro de conexão ao tentar excluir amostra.');
+        }
+      });
+    }
+  }
+
+  // Monitora quando a autenticação terminar de carregar
+  window.addEventListener('authReady', function(e) {
+    const user = e.detail;
+    if (!user || (!user.isAdmin && !user.isRedator)) {
+      alert('Acesso restrito: Você precisa ser Administrador ou Redator para editar amostras.');
+      window.location.href = "login.html";
+      return;
+    }
+    verificarBotaoExcluir();
+  });
+
+  // Salvar alterações
+  document.getElementById('formEditar').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const usuarioId = localStorage.getItem('usuarioId');
+    const btnSalvar = document.getElementById('btnSalvarEdicao');
+    btnSalvar.disabled = true;
+    btnSalvar.innerText = 'Salvando Alterações...';
+
+    try {
+      const file1 = document.getElementById('editImg1').files[0];
+      const file2 = document.getElementById('editImg2').files[0];
+      const file3 = document.getElementById('editImg3').files[0];
+
+      // Se o usuário selecionou uma nova imagem, converte para Base64; se não, mantém null para preservar a atual
+      const base64Img1 = file1 ? await arquivoParaBase64(file1) : null;
+      const base64Img2 = file2 ? await arquivoParaBase64(file2) : null;
+      const base64Img3 = file3 ? await arquivoParaBase64(file3) : null;
+
+      const payload = {
+        usuarioId: usuarioId,
+        nome: document.getElementById('editNome').value.trim(),
+        dureza: document.getElementById('editDureza').value.trim(),
+        descricao: document.getElementById('editDescricao').value.trim(),
+        imagem1: base64Img1,
+        imagem2: base64Img2,
+        imagem3: base64Img3
+      };
+
+      if (amostraAtual.categoria === 'rocha') {
+        payload.tipo_rocha = document.getElementById('editTipoRocha').value;
+      } else {
+        payload.padrao_geometrico = document.getElementById('editPadraoGeometrico').value.trim();
+        payload.clivagem = document.getElementById('editClivagem').value;
+        payload.grupo_mineral = document.getElementById('editGrupoMineral').value;
+      }
+
+      const response = await fetch(`http://localhost:3000/api/amostras/${amostraAtual.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+
+      if (data.sucesso) {
+        alert('Amostra atualizada com sucesso!');
+        window.location.href = amostraAtual.categoria === 'rocha' ? 'index.html' : 'indexMin.html';
+      } else {
+        alert('Erro ao atualizar: ' + data.mensagem);
+        btnSalvar.disabled = false;
+        btnSalvar.innerText = 'Salvar Alterações';
+      }
+
+    } catch (err) {
+      console.error('Erro de envio:', err);
+      alert('Erro ao conectar com o servidor para salvar edições.');
+      btnSalvar.disabled = false;
+      btnSalvar.innerText = 'Salvar Alterações';
+    }
+  });
+</script>
+
+</body>
+</html>

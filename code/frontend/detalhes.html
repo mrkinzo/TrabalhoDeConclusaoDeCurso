@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Studio - Detalhes da Amostra</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="stylePG.css" rel="stylesheet">
+  <link href="style.css" rel="stylesheet">
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg sticky-top">
+  <div class="container">
+    <a class="navbar-brand" href="IndexHome.html">STUDIO</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-end" id="navMenu">
+      <ul class="navbar-nav align-items-center">
+        <li class="nav-item"><a class="nav-link" href="IndexHome.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="index.html">Rochas</a></li>
+        <li class="nav-item"><a class="nav-link" href="indexMin.html">Minerais</a></li>
+        <li class="nav-item"><a class="nav-link" href="IndexAbout.html">Sobre o site</a></li>
+        <li id="authMenu" class="d-flex align-items-center"></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Black header -->
+<header class="site-header">
+  <h1 class="display-5" id="detalheTitulo">Carregando Amostra...</h1>
+  <p id="detalheSubtitulo" class="text-white-50">Studio - Acervo Virtual de Geociências</p>
+</header>
+
+<!-- Main content -->
+<main class="container py-4">
+  
+  <!-- Barra de Ações Rápidas (Editar / Excluir) -->
+  <div id="adminControls" class="d-none mb-4 d-flex justify-content-end gap-2">
+    <a href="#" id="btnEditarAmostra" class="btn btn-dark btn-sm shadow-sm">
+      Editar Amostra
+    </a>
+    <button type="button" id="btnExcluirAmostra" class="btn btn-danger btn-sm shadow-sm d-none">
+      Excluir Amostra (Admin Cascade)
+    </button>
+  </div>
+
+  <!-- Carrossel de 3 Imagens -->
+  <div id="amostraCarousel" class="carousel slide shadow-lg mb-4" data-bs-ride="carousel">
+    <div class="carousel-indicators" id="carouselIndicators"></div>
+    <div class="carousel-inner" id="carouselInner"></div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#amostraCarousel" data-bs-slide="prev">
+      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Anterior</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#amostraCarousel" data-bs-slide="next">
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Próximo</span>
+    </button>
+  </div>
+
+  <!-- Ficha Técnica Geológica -->
+  <div class="card border-0 shadow-sm mb-4 mx-auto" style="max-width: 750px; border-radius: 12px;">
+    <div class="card-body p-4">
+      <h3 class="h5 fw-bold mb-3 border-bottom pb-2">Propriedades e Características Físicas</h3>
+      <div class="row g-3" id="propriedadesGrid">
+        <!-- Injetado dinamicamente via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Descrição da Amostra -->
+  <div class="texto mt-4">
+    <h2 class="h4 fw-bold mb-3">Descrição Petrográfica / Mineralógica</h2>
+    <div id="detalheDescricao" class="text-muted" style="line-height: 1.8; font-size: 1.05rem; white-space: pre-line;">
+      Carregando descrição...
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  &copy; 2026 Studio. All rights reserved.
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="auth.js"></script>
+
+<script>
+  let amostraGlobal = null;
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id');
+
+    if (!id) {
+      alert('Amostra não especificada.');
+      window.location.href = 'IndexHome.html';
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:3000/api/amostras/${id}`);
+      const data = await response.json();
+
+      if (!data.sucesso || !data.amostra) {
+        alert('Amostra não encontrada no banco de dados.');
+        window.location.href = 'IndexHome.html';
+        return;
+      }
+
+      amostraGlobal = data.amostra;
+      renderizarDetalhes(amostraGlobal);
+      configurarControlesAdmin();
+
+    } catch (err) {
+      console.error('Erro ao carregar detalhes:', err);
+      document.getElementById('detalheTitulo').innerText = 'Erro ao carregar amostra';
+      document.getElementById('detalheDescricao').innerText = 'Não foi possível se conectar ao servidor.';
+    }
+  });
+
+  function renderizarDetalhes(item) {
+    document.getElementById('detalheTitulo').innerText = item.nome;
+    document.getElementById('detalheSubtitulo').innerText = `${item.categoria.toUpperCase()} • Catalogado no Acervo Virtual`;
+    document.getElementById('detalheDescricao').innerText = item.descricao || 'Sem descrição cadastrada.';
+
+    // Monta Carrossel com as imagens disponíveis (imagem1, imagem2, imagem3)
+    const imagens = [];
+    if (item.imagem1) imagens.push(item.imagem1);
+    if (item.imagem2) imagens.push(item.imagem2);
+    if (item.imagem3) imagens.push(item.imagem3);
+
+    // Se a API retornou um array 'imagens' da tabela relacional
+    if (item.imagens && item.imagens.length > 0) {
+      item.imagens.forEach(img => {
+        if (!imagens.includes(img)) imagens.push(img);
+      });
+    }
+
+    const indicatorsEl = document.getElementById('carouselIndicators');
+    const innerEl = document.getElementById('carouselInner');
+    indicatorsEl.innerHTML = '';
+    innerEl.innerHTML = '';
+
+    imagens.forEach((url, idx) => {
+      indicatorsEl.innerHTML += `
+        <button type="button" data-bs-target="#amostraCarousel" data-bs-slide-to="${idx}" 
+          class="${idx === 0 ? 'active' : ''}" aria-label="Foto ${idx + 1}"></button>
+      `;
+
+      innerEl.innerHTML += `
+        <div class="carousel-item ${idx === 0 ? 'active' : ''}">
+          <img class="d-block w-100" src="${url}" alt="${item.nome} - Vista ${idx + 1}"
+               onerror="this.src='https://via.placeholder.com/600x380?text=Imagem+Nao+Encontrada'">
+        </div>
+      `;
+    });
+
+    // Propriedades Geológicas
+    const grid = document.getElementById('propriedadesGrid');
+    let propsHtml = `
+      <div class="col-6 col-md-4">
+        <small class="text-muted d-block">Categoria</small>
+        <span class="badge bg-dark">${item.categoria.toUpperCase()}</span>
+      </div>
+      <div class="col-6 col-md-4">
+        <small class="text-muted d-block">Dureza</small>
+        <strong>${item.dureza || 'Não informada'}</strong>
+      </div>
+    `;
+
+    if (item.categoria === 'rocha') {
+      propsHtml += `
+        <div class="col-12 col-md-4">
+          <small class="text-muted d-block">Tipo de Rocha</small>
+          <span class="badge bg-secondary">${item.tipo_rocha || 'Geral'}</span>
+        </div>
+      `;
+    } else {
+      propsHtml += `
+        <div class="col-6 col-md-4">
+          <small class="text-muted d-block">Padrão Geométrico</small>
+          <strong>${item.padrao_geometrico || 'Não especificado'}</strong>
+        </div>
+        <div class="col-6 col-md-4">
+          <small class="text-muted d-block">Clivagem</small>
+          <strong>${item.clivagem || 'Não especificada'}</strong>
+        </div>
+        <div class="col-12 col-md-8">
+          <small class="text-muted d-block">Grupo Mineral</small>
+          <span class="badge bg-primary">${item.grupo_mineral || 'Geral'}</span>
+        </div>
+      `;
+    }
+
+    grid.innerHTML = propsHtml;
+  }
+
+  function configurarControlesAdmin() {
+    const user = window.usuarioLogado;
+    if (!user || !amostraGlobal) return;
+
+    const adminControls = document.getElementById('adminControls');
+    const btnEditar = document.getElementById('btnEditarAmostra');
+    const btnExcluir = document.getElementById('btnExcluirAmostra');
+
+    // Admins e Redatores podem editar
+    if (user.isAdmin || user.isRedator) {
+      adminControls.classList.remove('d-none');
+      btnEditar.href = `editarAmostra.html?id=${amostraGlobal.id}`;
+    }
+
+    // SOMENTE Admins podem excluir (com cascade)
+    if (user.isAdmin) {
+      btnExcluir.classList.remove('d-none');
+      btnExcluir.addEventListener('click', async () => {
+        const confirmar = confirm(`EXCLUSÃO EM CASCATA (ADMIN):\nTem certeza que deseja apagar permanentemente a amostra "${amostraGlobal.nome}" do acervo e banco de dados?`);
+        if (!confirmar) return;
+
+        try {
+          const resp = await fetch(`http://localhost:3000/api/amostras/${amostraGlobal.id}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usuarioId: user.id })
+          });
+          const resData = await resp.json();
+
+          if (resData.sucesso) {
+            alert('Amostra e todas as dependências apagadas com sucesso (Cascade).');
+            window.location.href = amostraGlobal.categoria === 'rocha' ? 'index.html' : 'indexMin.html';
+          } else {
+            alert('Erro ao excluir: ' + resData.mensagem);
+          }
+        } catch (e) {
+          console.error(e);
+          alert('Erro ao conectar com o servidor.');
+        }
+      });
+    }
+  }
+
+  window.addEventListener('authReady', () => {
+    configurarControlesAdmin();
+  });
+</script>
+
+</body>
+</html>
