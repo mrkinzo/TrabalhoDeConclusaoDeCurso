@@ -39,18 +39,6 @@ async function carregarCatalogoDinamico(categoria) {
 
                 col.innerHTML = `
                     <div class="card item-card h-100 shadow-sm position-relative" data-id="${item.id}" data-nome="${item.nome}">
-                        <!-- Aba de Ações do Card -->
-                        <div class="card-admin-tab d-none" data-amostra-id="${item.id}">
-                            <a href="editarAmostra.html?id=${item.id}" class="btn btn-dark btn-sm" onclick="event.stopPropagation()" title="Editar esta amostra">
-                                Editar
-                            </a>
-                            <button type="button" class="btn btn-danger btn-sm btn-deletar-card d-none" 
-                                onclick="deletarAmostraDoCard(event, ${item.id}, '${item.nome.replace(/'/g, "\\'")}')" 
-                                title="Excluir do acervo (Exclusivo Administrador)">
-                                Excluir
-                            </button>
-                        </div>
-
                         <a href="detalhes.html?id=${item.id}" class="text-decoration-none text-dark d-block h-100 card-link-principal">
                             <img src="${item.imagem1}" alt="Amostra de ${item.nome}" 
                                  class="card-img-top"
@@ -296,7 +284,7 @@ async function deletarAmostraDoCard(event, id, nome) {
         return;
     }
 
-    const confirmar = confirm(`EXCLUSÃO EM CASCATA (ADMINISTRADOR):\n\nTem certeza que deseja apagar permanentemente a amostra "${nome}" do acervo?\n\nEsta ação excluirá todos os dados e imagens vinculadas do banco de dados em CASCADE.`);
+    const confirmar = confirm(`CONFIRMAÇÃO DE EXCLUSÃO (ADMINISTRADOR):\n\nTem certeza que deseja excluir permanentemente a amostra "${nome}" do acervo?\n\nTodas as fotos e dados cadastrados serão removidos definitivamente.`);
     if (!confirmar) return;
 
     try {
@@ -311,7 +299,7 @@ async function deletarAmostraDoCard(event, id, nome) {
         const data = await response.json();
 
         if (data.sucesso) {
-            alert(`Amostra "${nome}" excluída com sucesso em cascata!`);
+            alert(`Amostra "${nome}" excluída com sucesso!`);
             
             // Remove o card visualmente
             const cardEl = document.getElementById(`card-amostra-${id}`);

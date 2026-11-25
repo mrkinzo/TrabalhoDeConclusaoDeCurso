@@ -17,7 +17,28 @@ CREATE TABLE IF NOT EXISTS users (
     ADMIN BOOLEAN DEFAULT FALSE,
     PROFESSOR BOOLEAN DEFAULT FALSE,
     REDATOR BOOLEAN DEFAULT FALSE,
+    solicitacao_redator ENUM('nenhuma', 'pendente', 'aprovado', 'reprovado') DEFAULT 'nenhuma',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==============================================================
+-- Tabela de Auditoria das Operações do Banco de Dados (Heurística 9)
+-- Registra todas as ações administrativas, alterações no catálogo,
+-- registros de usuários e controle de aprovação de redatores.
+-- Acesso restrito exclusivamente ao Administrador.
+-- ==============================================================
+CREATE TABLE IF NOT EXISTS auditoria (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT DEFAULT NULL,
+    usuario_nome VARCHAR(100) DEFAULT NULL,
+    acao VARCHAR(50) NOT NULL,
+    tabela_afetada VARCHAR(50) NOT NULL,
+    registro_id INT DEFAULT NULL,
+    detalhes TEXT DEFAULT NULL,
+    ip VARCHAR(45) DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_auditoria_usuario FOREIGN KEY (usuario_id) 
+        REFERENCES users(id) ON DELETE SET NULL
 );
 
 -- ==============================================================

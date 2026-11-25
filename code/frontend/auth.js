@@ -57,6 +57,11 @@ document.addEventListener("DOMContentLoaded", async function () {
                             <li><a class="dropdown-item" href="adicionarRocha.html">+ Adicionar Rocha</a></li>
                             <li><a class="dropdown-item" href="adicionarMineral.html">+ Adicionar Mineral</a></li>
                         ` : ''}
+                        ${usuarioLogado.isAdmin ? `
+                            <li><hr class="dropdown-divider"></li>
+                            <li><h6 class="dropdown-header text-uppercase text-danger">Administração</h6></li>
+                            <li><a class="dropdown-item fw-bold text-dark" href="admin.html"><i class="bi bi-shield-lock"></i> Painel do Administrador</a></li>
+                        ` : ''}
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" href="#" id="btnLogout">Sair da conta</a></li>
                     </ul>
@@ -124,6 +129,9 @@ document.addEventListener("DOMContentLoaded", async function () {
                 <button type="button" id="btnAcaoRemover" class="btn btn-danger fw-semibold" title="Selecionar amostra no catálogo para remover">
                     Remover
                 </button>
+                <a href="admin.html" class="btn btn-dark fw-semibold" title="Painel Administrativo (Auditoria e Redatores)">
+                    Painel ADM
+                </a>
             ` : ''}
         `;
 

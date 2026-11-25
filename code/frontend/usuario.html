@@ -21,7 +21,7 @@
                     </button>
                     <div class="collapse navbar-collapse justify-content-end"
                         id="navMenu">
-                        <ul class="navbar-nav align-items-center" id="authMenu">
+                        <ul class="navbar-nav align-items-center">
                             <li class="nav-item"><a class="nav-link"
                                     href="IndexHome.html">Home</a></li>
                             <li class="nav-item"><a class="nav-link"
@@ -31,7 +31,8 @@
                             <li class="nav-item"><a class="nav-link"
                                     href="IndexAbout.html">Sobre o site</a></li>
 
-                            <!-- OS BOTÕES SERÃO INJETADOS AQUI AUTOMATICAMENTE PELO JAVASCRIPT -->
+                            <!-- Ponto de injeção dos botões de autenticação -->
+                            <li id="authMenu" class="d-flex align-items-center"></li>
                         </ul>
                     </div>
                 </nav>
@@ -62,9 +63,18 @@
                             </div>
                         </div>
 
+                        <!-- Área exclusiva para Administrador -->
+                        <div id="adminCardArea" class="d-none mb-4 p-3 bg-light rounded border border-danger border-opacity-25">
+                            <h6 class="fw-bold text-danger mb-1">Painel do Administrador</h6>
+                            <p class="small text-muted mb-2">Gerencie solicitações de redatores e consulte os logs de auditoria do banco de dados.</p>
+                            <a href="admin.html" class="btn btn-dark btn-sm fw-bold">
+                                Acessar Painel do ADM (Auditoria & Redatores)
+                            </a>
+                        </div>
+
                         <hr class="my-4">
 
-                        <button id="btnDeslogar" class="btn btn-danger w-100">Sair
+                        <button id="btnDeslogar" class="btn btn-outline-danger w-100">Sair
                             da conta (Logout)</button>
                     </div>
                 </main>
@@ -116,10 +126,20 @@
             const containerCargos = document.getElementById('perfilCargos');
             let htmlCargos = '';
 
-            if (usuarioLogado.isAdmin) htmlCargos += '<span class="badge bg-danger me-2">Administrador</span>';
-            if (usuarioLogado.isProfessor) htmlCargos += '<span class="badge bg-secondary me-2">Professor</span>';
-            if (usuarioLogado.isRedator) htmlCargos += '<span class="badge bg-secondary me-2">Redator</span>';
+            if (usuarioLogado.isAdmin) {
+                htmlCargos += '<span class="badge bg-danger me-2">Administrador</span>';
+                document.getElementById('adminCardArea')?.classList.remove('d-none');
+            }
+            if (usuarioLogado.isProfessor) htmlCargos += '<span class="badge bg-primary me-2">Professor</span>';
+            if (usuarioLogado.isRedator) htmlCargos += '<span class="badge bg-success me-2">Redator Ativo</span>';
             
+            // Exibe status da solicitação de redator
+            if (usuarioLogado.solicitacaoRedator === 'pendente') {
+                htmlCargos += '<span class="badge bg-warning text-dark me-2">Solicitação de Redator: Pendente de Análise pelo ADM</span>';
+            } else if (usuarioLogado.solicitacaoRedator === 'reprovado') {
+                htmlCargos += '<span class="badge bg-secondary me-2">Solicitação de Redator: Reprovada (Acesso normal)</span>';
+            }
+
             if (!htmlCargos) {
                 htmlCargos = '<span class="text-muted">Usuário padrão</span>';
             }

@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Studio - Painel Administrativo</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="style.css" rel="stylesheet">
+  <style>
+    .nav-tabs .nav-link {
+      color: #495057;
+      font-weight: 600;
+    }
+    .nav-tabs .nav-link.active {
+      color: #000;
+      border-color: #dee2e6 #dee2e6 #fff;
+      font-weight: 700;
+    }
+    .badge-acao-CRIAR_AMOSTRA { background-color: #198754; color: #fff; }
+    .badge-acao-EDITAR_AMOSTRA { background-color: #0d6efd; color: #fff; }
+    .badge-acao-EXCLUIR_AMOSTRA { background-color: #dc3545; color: #fff; }
+    .badge-acao-REGISTRO_USUARIO { background-color: #6f42c1; color: #fff; }
+    .badge-acao-APROVAR_REDATOR { background-color: #0dcaf0; color: #000; }
+    .badge-acao-REPROVAR_REDATOR { background-color: #fd7e14; color: #fff; }
+    .badge-acao-REVOGAR_REDATOR { background-color: #6c757d; color: #fff; }
+    .badge-acao-LOGIN { background-color: #212529; color: #fff; }
+    .table-responsive {
+      max-height: 580px;
+      overflow-y: auto;
+    }
+    .card-kpi {
+      border: 1px solid #e9ecef;
+      border-radius: 10px;
+      transition: transform 0.2s ease;
+    }
+    .card-kpi:hover {
+      transform: translateY(-3px);
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg sticky-top">
+  <div class="container">
+    <a class="navbar-brand" href="IndexHome.html">STUDIO</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-end" id="navMenu">
+      <ul class="navbar-nav align-items-center">
+        <li class="nav-item"><a class="nav-link" href="IndexHome.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="index.html">Rochas</a></li>
+        <li class="nav-item"><a class="nav-link" href="indexMin.html">Minerais</a></li>
+        <li class="nav-item"><a class="nav-link" href="IndexAbout.html">Sobre o site</a></li>
+        <li id="authMenu" class="d-flex align-items-center"></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Black header -->
+<header class="site-header">
+  <h1 class="display-5">PAINEL DO ADMINISTRADOR</h1>
+  <p>Gestão de Redatores, Aprovação de Cadastros e Auditoria de Operações do BD .</p>
+</header>
+
+<!-- Main content -->
+<main class="container py-4 my-3" style="max-width: 1140px;">
+
+  <!-- Alerta de Acesso Restrito / Carregamento -->
+  <div id="loadingPermissao" class="text-center py-5">
+    <div class="spinner-border text-dark" role="status"></div>
+    <p class="text-muted mt-2">Validando credenciais de Administrador...</p>
+  </div>
+
+  <div id="painelAdminConteudo" class="d-none">
+
+    <!-- KPIs Rápidos -->
+    <div class="row g-3 mb-4">
+      <div class="col-12 col-md-4">
+        <div class="card card-kpi p-3 shadow-sm bg-white">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <span class="text-muted small fw-semibold">Solicitações Pendentes</span>
+              <h3 class="fw-bold mb-0 text-danger" id="kpiPendentes">0</h3>
+            </div>
+            <div class="fs-1 text-danger opacity-75">
+              <i class="bi bi-person-exclamation"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-4">
+        <div class="card card-kpi p-3 shadow-sm bg-white">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <span class="text-muted small fw-semibold">Redatores Ativos</span>
+              <h3 class="fw-bold mb-0 text-primary" id="kpiRedatores">0</h3>
+            </div>
+            <div class="fs-1 text-primary opacity-75">
+              <i class="bi bi-people-fill"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-4">
+        <div class="card card-kpi p-3 shadow-sm bg-white">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <span class="text-muted small fw-semibold">Total de Registros de Auditoria</span>
+              <h3 class="fw-bold mb-0 text-dark" id="kpiLogs">0</h3>
+            </div>
+            <div class="fs-1 text-dark opacity-75">
+              <i class="bi bi-journal-text"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navegação por Abas -->
+    <ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="tab-pendentes-btn" data-bs-toggle="tab" data-bs-target="#tab-pendentes" type="button" role="tab">
+          <i class="bi bi-inbox-fill me-1"></i> Solicitações de Redator
+          <span class="badge bg-danger ms-1" id="badgeContadorPendentes">0</span>
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-redatores-btn" data-bs-toggle="tab" data-bs-target="#tab-redatores" type="button" role="tab">
+          <i class="bi bi-person-check-fill me-1"></i> Redatores Ativos
+          <span class="badge bg-secondary ms-1" id="badgeContadorRedatores">0</span>
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-auditoria-btn" data-bs-toggle="tab" data-bs-target="#tab-auditoria" type="button" role="tab">
+          <i class="bi bi-shield-lock-fill me-1"></i> Auditoria do Banco de Dados
+        </button>
+      </li>
+    </ul>
+
+    <!-- Conteúdo das Abas -->
+    <div class="tab-content">
+
+      <!-- ABA 1: SOLICITAÇÕES PENDENTES -->
+      <div class="tab-pane fade show active" id="tab-pendentes" role="tabpanel">
+        <div class="card border-0 shadow-sm p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h3 class="h5 fw-bold mb-1">Aprovação de Novos Redatores</h3>
+              <p class="text-muted small mb-0">
+                Usuários que solicitaram permissão de Redator durante o cadastro. Aprove para conceder acesso de edição e inclusão de amostras, ou reprove para manter como usuário normal.
+              </p>
+            </div>
+            <button type="button" class="btn btn-outline-dark btn-sm" onclick="carregarRedatoresESolicitacoes()">
+              <i class="bi bi-arrow-clockwise"></i> Atualizar
+            </button>
+          </div>
+
+          <div id="containerPendentes" class="table-responsive">
+            <!-- Tabela injetada via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ABA 2: REDATORES ATIVOS -->
+      <div class="tab-pane fade" id="tab-redatores" role="tabpanel">
+        <div class="card border-0 shadow-sm p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h3 class="h5 fw-bold mb-1">Equipe de Redatores do Acervo</h3>
+              <p class="text-muted small mb-0">
+                Usuários com permissão ativa para adicionar e editar amostras de rochas e minerais no acervo.
+              </p>
+            </div>
+            <button type="button" class="btn btn-outline-dark btn-sm" onclick="carregarRedatoresESolicitacoes()">
+              <i class="bi bi-arrow-clockwise"></i> Atualizar
+            </button>
+          </div>
+
+          <div id="containerRedatores" class="table-responsive">
+            <!-- Tabela injetada via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ABA 3: AUDITORIA DO BANCO DE DADOS (HEURÍSTICA 9) -->
+      <div class="tab-pane fade" id="tab-auditoria" role="tabpanel">
+        <div class="card border-0 shadow-sm p-4">
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <div>
+              <h3 class="h5 fw-bold mb-1">Logs de Auditoria das Operações do Banco de Dados</h3>
+              <p class="text-muted small mb-0">
+                Histórico imutável de transações (criações, edições, exclusões, aprovações e logins). Visível exclusivamente para Administradores.
+              </p>
+            </div>
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-outline-dark btn-sm" onclick="carregarAuditoria()">
+                <i class="bi bi-arrow-clockwise"></i> Atualizar Logs
+              </button>
+            </div>
+          </div>
+
+          <!-- Filtro de busca na auditoria -->
+          <div class="row g-2 mb-3">
+            <div class="col-md-6">
+              <input type="text" id="filtroAuditoria" class="form-control form-control-sm" placeholder="🔍 Filtrar logs por usuário, ação ou detalhe...">
+            </div>
+            <div class="col-md-3">
+              <select id="filtroAcao" class="form-select form-select-sm">
+                <option value="">-- Todas as Ações --</option>
+                <option value="CRIAR_AMOSTRA">Criação de Amostra</option>
+                <option value="EDITAR_AMOSTRA">Edição de Amostra</option>
+                <option value="EXCLUIR_AMOSTRA">Exclusão de Amostra</option>
+                <option value="APROVAR_REDATOR">Aprovação de Redator</option>
+                <option value="REPROVAR_REDATOR">Reprovação de Redator</option>
+                <option value="REVOGAR_REDATOR">Revogação de Redator</option>
+                <option value="REGISTRO_USUARIO">Registro de Usuário</option>
+                <option value="LOGIN">Login</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="containerAuditoria" class="table-responsive">
+            <!-- Tabela injetada via JS -->
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</main>
+
+<footer>
+  &copy; 2026 Studio. Todos os direitos reservados.
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="auth.js"></script>
+<script>
+  let logsAuditoriaGlobal = [];
+
+  // Proteção de rota e inicialização
+  window.addEventListener('authReady', async function (e) {
+    const user = e.detail;
+
+    if (!user || !user.isAdmin) {
+      alert('Acesso restrito: Você precisa estar logado como Administrador (ADM) para acessar o Painel Administrativo.');
+      window.location.href = 'IndexHome.html';
+      return;
+    }
+
+    document.getElementById('loadingPermissao').classList.add('d-none');
+    document.getElementById('painelAdminConteudo').classList.remove('d-none');
+
+    // Carrega os dados das abas
+    carregarRedatoresESolicitacoes();
+    carregarAuditoria();
+  });
+
+  // ==========================================
+  // CARREGAR E GERENCIAR REDATORES
+  // ==========================================
+  async function carregarRedatoresESolicitacoes() {
+    const usuarioId = localStorage.getItem('usuarioId');
+    if (!usuarioId) return;
+
+    try {
+      const resp = await fetch(`http://localhost:3000/api/admin/redatores?usuarioId=${usuarioId}`, {
+        headers: { 'x-usuario-id': usuarioId }
+      });
+      const data = await resp.json();
+
+      if (!data.sucesso) {
+        alert('Erro ao buscar lista de redatores: ' + data.mensagem);
+        return;
+      }
+
+      // 1. Atualizar KPIs e Contadores
+      const totalPendentes = data.pendentes ? data.pendentes.length : 0;
+      const totalRedatores = data.redatores ? data.redatores.length : 0;
+
+      document.getElementById('kpiPendentes').innerText = totalPendentes;
+      document.getElementById('badgeContadorPendentes').innerText = totalPendentes;
+      document.getElementById('kpiRedatores').innerText = totalRedatores;
+      document.getElementById('badgeContadorRedatores').innerText = totalRedatores;
+
+      // 2. Renderizar Solicitações Pendentes
+      renderizarTabelaPendentes(data.pendentes || []);
+
+      // 3. Renderizar Redatores Ativos
+      renderizarTabelaRedatores(data.redatores || []);
+
+    } catch (err) {
+      console.error('Erro ao carregar redatores:', err);
+    }
+  }
+
+  function renderizarTabelaPendentes(pendentes) {
+    const container = document.getElementById('containerPendentes');
+
+    if (pendentes.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-5">
+          <i class="bi bi-check-circle text-success fs-1"></i>
+          <h4 class="h6 fw-bold mt-2">Nenhuma solicitação pendente</h4>
+          <p class="text-muted small">Todas as solicitações de redator foram analisadas.</p>
+        </div>
+      `;
+      return;
+    }
+
+    let rowsHtml = pendentes.map(u => {
+      const dataCadastro = u.created_at ? new Date(u.created_at).toLocaleString('pt-BR') : 'Data não informada';
+      const badgeProfessor = u.PROFESSOR 
+        ? '<span class="badge bg-primary">Professor</span>' 
+        : '<span class="badge bg-secondary">Não informado</span>';
+
+      return `
+        <tr>
+          <td>
+            <div class="fw-bold">${u.username}</div>
+            <small class="text-muted">${u.email}</small>
+          </td>
+          <td>${badgeProfessor}</td>
+          <td><small class="text-muted">${dataCadastro}</small></td>
+          <td>
+            <span class="badge bg-warning text-dark">Aguardando Avaliação</span>
+          </td>
+          <td class="text-end">
+            <button type="button" class="btn btn-success btn-sm me-1 fw-bold" onclick="aprovarRedator(${u.id}, '${u.username}')">
+              <i class="bi bi-check-lg"></i> Aprovar
+            </button>
+            <button type="button" class="btn btn-outline-danger btn-sm fw-bold" onclick="reprovarRedator(${u.id}, '${u.username}')">
+              <i class="bi bi-x-lg"></i> Reprovar
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    container.innerHTML = `
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Usuário / E-mail</th>
+            <th>Vínculo Docente</th>
+            <th>Data de Solicitação</th>
+            <th>Status</th>
+            <th class="text-end">Ações do Administrador</th>
+          </tr>
+        </thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+    `;
+  }
+
+  function renderizarTabelaRedatores(redatores) {
+    const container = document.getElementById('containerRedatores');
+
+    if (redatores.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-5">
+          <i class="bi bi-people text-muted fs-1"></i>
+          <h4 class="h6 fw-bold mt-2">Nenhum redator ativo no momento</h4>
+          <p class="text-muted small">Aprove solicitações pendentes para compor a equipe.</p>
+        </div>
+      `;
+      return;
+    }
+
+    let rowsHtml = redatores.map(u => {
+      const dataCadastro = u.created_at ? new Date(u.created_at).toLocaleDateString('pt-BR') : '-';
+      const badgeProfessor = u.PROFESSOR 
+        ? '<span class="badge bg-primary">Professor</span>' 
+        : '<span class="badge bg-secondary">Comum</span>';
+
+      return `
+        <tr>
+          <td>
+            <div class="fw-bold">${u.username}</div>
+            <small class="text-muted">${u.email}</small>
+          </td>
+          <td>${badgeProfessor}</td>
+          <td><span class="badge bg-success">Redator Ativo</span></td>
+          <td><small class="text-muted">${dataCadastro}</small></td>
+          <td class="text-end">
+            <button type="button" class="btn btn-outline-danger btn-sm" onclick="revogarRedator(${u.id}, '${u.username}')">
+              <i class="bi bi-person-x"></i> Revogar Permissão
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    container.innerHTML = `
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Nome / E-mail</th>
+            <th>Vínculo</th>
+            <th>Status</th>
+            <th>Membro Desde</th>
+            <th class="text-end">Ações</th>
+          </tr>
+        </thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+    `;
+  }
+
+  // ==========================================
+  // AÇÕES DO ADM: APROVAR, REPROVAR, REVOGAR
+  // ==========================================
+  async function aprovarRedator(id, nome) {
+    const usuarioId = localStorage.getItem('usuarioId');
+    const confirmar = confirm(`APROVAR REDATOR:\n\nDeseja conceder a permissão de Redator para "${nome}"?\nO usuário poderá cadastrar e editar amostras de rochas e minerais no acervo.`);
+    if (!confirmar) return;
+
+    try {
+      const resp = await fetch(`http://localhost:3000/api/admin/redatores/${id}/aprovar`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-usuario-id': usuarioId
+        },
+        body: JSON.stringify({ usuarioId })
+      });
+      const data = await resp.json();
+
+      if (data.sucesso) {
+        alert(data.mensagem);
+        carregarRedatoresESolicitacoes();
+        carregarAuditoria();
+      } else {
+        alert('Erro ao aprovar: ' + data.mensagem);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Erro de conexão com o servidor.');
+    }
+  }
+
+  async function reprovarRedator(id, nome) {
+    const usuarioId = localStorage.getItem('usuarioId');
+    const confirmar = confirm(`REPROVAR SOLICITAÇÃO:\n\nDeseja reprovar a solicitação de redator de "${nome}"?\nO usuário continuará registrado no sistema normalmente como usuário comum.`);
+    if (!confirmar) return;
+
+    try {
+      const resp = await fetch(`http://localhost:3000/api/admin/redatores/${id}/reprovar`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-usuario-id': usuarioId
+        },
+        body: JSON.stringify({ usuarioId })
+      });
+      const data = await resp.json();
+
+      if (data.sucesso) {
+        alert(data.mensagem);
+        carregarRedatoresESolicitacoes();
+        carregarAuditoria();
+      } else {
+        alert('Erro ao reprovar: ' + data.mensagem);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Erro de conexão com o servidor.');
+    }
+  }
+
+  async function revogarRedator(id, nome) {
+    const usuarioId = localStorage.getItem('usuarioId');
+    const confirmar = confirm(`REVOGAR REDATOR:\n\nTem certeza que deseja revogar o acesso de redator de "${nome}"?\nO usuário voltará a ser usuário comum e não poderá mais adicionar ou editar amostras.`);
+    if (!confirmar) return;
+
+    try {
+      const resp = await fetch(`http://localhost:3000/api/admin/redatores/${id}/revogar`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-usuario-id': usuarioId
+        },
+        body: JSON.stringify({ usuarioId })
+      });
+      const data = await resp.json();
+
+      if (data.sucesso) {
+        alert(data.mensagem);
+        carregarRedatoresESolicitacoes();
+        carregarAuditoria();
+      } else {
+        alert('Erro ao revogar: ' + data.mensagem);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Erro de conexão com o servidor.');
+    }
+  }
+
+  // ==========================================
+  // CARREGAR E FILTRAR AUDITORIA DO BD (HEURÍSTICA 9)
+  // ==========================================
+  async function carregarAuditoria() {
+    const usuarioId = localStorage.getItem('usuarioId');
+    if (!usuarioId) return;
+
+    try {
+      const resp = await fetch(`http://localhost:3000/api/admin/auditoria?usuarioId=${usuarioId}`, {
+        headers: { 'x-usuario-id': usuarioId }
+      });
+      const data = await resp.json();
+
+      if (!data.sucesso) {
+        console.error('Erro ao buscar auditoria:', data.mensagem);
+        return;
+      }
+
+      logsAuditoriaGlobal = data.logs || [];
+      document.getElementById('kpiLogs').innerText = logsAuditoriaGlobal.length;
+      renderizarTabelaAuditoria(logsAuditoriaGlobal);
+
+    } catch (err) {
+      console.error('Erro ao carregar auditoria:', err);
+    }
+  }
+
+  function renderizarTabelaAuditoria(logs) {
+    const container = document.getElementById('containerAuditoria');
+
+    if (logs.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-5">
+          <i class="bi bi-journal-x text-muted fs-1"></i>
+          <h4 class="h6 fw-bold mt-2">Nenhum registro de auditoria encontrado</h4>
+          <p class="text-muted small">As operações no banco de dados serão exibidas aqui conforme forem executadas.</p>
+        </div>
+      `;
+      return;
+    }
+
+    let rowsHtml = logs.map(l => {
+      const dataHora = l.created_at ? new Date(l.created_at).toLocaleString('pt-BR') : '-';
+      const badgeClasse = `badge-acao-${l.acao}`;
+      const acaoRotulo = l.acao.replace(/_/g, ' ');
+
+      return `
+        <tr>
+          <td><small class="text-muted fw-bold">#${l.id}</small></td>
+          <td><small class="text-nowrap">${dataHora}</small></td>
+          <td>
+            <div class="fw-semibold text-truncate" style="max-width: 150px;">${l.usuario_nome || 'Sistema'}</div>
+            <small class="text-muted">ID: ${l.usuario_id || '-'}</small>
+          </td>
+          <td>
+            <span class="badge ${badgeClasse}">${acaoRotulo}</span>
+          </td>
+          <td><span class="badge bg-light text-dark border">${l.tabela_afetada}</span></td>
+          <td>
+            <div class="small" style="max-width: 420px; white-space: normal;">
+              ${l.detalhes || '-'}
+            </div>
+          </td>
+          <td><small class="text-muted">${l.ip || 'Localhost'}</small></td>
+        </tr>
+      `;
+    }).join('');
+
+    container.innerHTML = `
+      <table class="table table-hover table-striped align-middle mb-0 font-monospace small">
+        <thead class="table-dark">
+          <tr>
+            <th>ID</th>
+            <th>Data/Hora</th>
+            <th>Usuário</th>
+            <th>Ação</th>
+            <th>Tabela</th>
+            <th>Detalhes da Operação</th>
+            <th>IP</th>
+          </tr>
+        </thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+    `;
+  }
+
+  // Filtros de busca em tempo real da auditoria
+  document.getElementById('filtroAuditoria')?.addEventListener('input', aplicarFiltroAuditoria);
+  document.getElementById('filtroAcao')?.addEventListener('change', aplicarFiltroAuditoria);
+
+  function aplicarFiltroAuditoria() {
+    const texto = (document.getElementById('filtroAuditoria').value || '').toLowerCase().trim();
+    const acao = (document.getElementById('filtroAcao').value || '').trim();
+
+    const logsFiltrados = logsAuditoriaGlobal.filter(l => {
+      const matchAcao = !acao || l.acao === acao;
+      const matchTexto = !texto || 
+        (l.usuario_nome && l.usuario_nome.toLowerCase().includes(texto)) ||
+        (l.detalhes && l.detalhes.toLowerCase().includes(texto)) ||
+        (l.tabela_afetada && l.tabela_afetada.toLowerCase().includes(texto)) ||
+        (l.acao && l.acao.toLowerCase().includes(texto));
+
+      return matchAcao && matchTexto;
+    });
+
+    renderizarTabelaAuditoria(logsFiltrados);
+  }
+
+  window.carregarRedatoresESolicitacoes = carregarRedatoresESolicitacoes;
+  window.carregarAuditoria = carregarAuditoria;
+  window.aprovarRedator = aprovarRedator;
+  window.reprovarRedator = reprovarRedator;
+  window.revogarRedator = revogarRedator;
+</script>
+
+</body>
+</html>

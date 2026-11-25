@@ -38,14 +38,20 @@
 <!-- Main content -->
 <main class="container py-4">
   
-  <!-- Barra de Ações Rápidas (Editar / Excluir) -->
-  <div id="adminControls" class="d-none mb-4 d-flex justify-content-end gap-2">
-    <a href="#" id="btnEditarAmostra" class="btn btn-dark btn-sm shadow-sm">
-      Editar Amostra
+  <!-- Barra Superior de Navegação e Ações Rápidas -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <a href="javascript:if(window.history.length>1){window.history.back();}else{window.location.href='index.html';}" class="btn btn-outline-secondary btn-sm">
+      &larr; Voltar ao Catálogo
     </a>
-    <button type="button" id="btnExcluirAmostra" class="btn btn-danger btn-sm shadow-sm d-none">
-      Excluir Amostra (Admin Cascade)
-    </button>
+
+    <div id="adminControls" class="d-none d-flex gap-2">
+      <a href="#" id="btnEditarAmostra" class="btn btn-dark btn-sm shadow-sm">
+        Editar Amostra
+      </a>
+      <button type="button" id="btnExcluirAmostra" class="btn btn-outline-danger btn-sm shadow-sm d-none">
+        Excluir Amostra
+      </button>
+    </div>
   </div>
 
   <!-- Carrossel de 3 Imagens -->
@@ -218,7 +224,7 @@
     if (user.isAdmin) {
       btnExcluir.classList.remove('d-none');
       btnExcluir.addEventListener('click', async () => {
-        const confirmar = confirm(`EXCLUSÃO EM CASCATA (ADMIN):\nTem certeza que deseja apagar permanentemente a amostra "${amostraGlobal.nome}" do acervo e banco de dados?`);
+        const confirmar = confirm(`CONFIRMAÇÃO DE EXCLUSÃO (ADMINISTRADOR):\n\nTem certeza que deseja excluir permanentemente a amostra "${amostraGlobal.nome}" do acervo?\n\nTodas as fotos e dados cadastrados serão removidos definitivamente.`);
         if (!confirmar) return;
 
         try {
@@ -230,7 +236,7 @@
           const resData = await resp.json();
 
           if (resData.sucesso) {
-            alert('Amostra e todas as dependências apagadas com sucesso (Cascade).');
+            alert('Amostra e fotografias associadas excluídas com sucesso!');
             window.location.href = amostraGlobal.categoria === 'rocha' ? 'index.html' : 'indexMin.html';
           } else {
             alert('Erro ao excluir: ' + resData.mensagem);

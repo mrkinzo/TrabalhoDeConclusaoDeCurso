@@ -31,9 +31,59 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
-// Inicialização automática das tabelas de amostras e imagens com CASCADE
+// Inicialização automática das tabelas: users, auditoria, amostras e imagens
 async function initDatabase() {
     try {
+        // 1. Tabela de Usuários
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS users (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                username VARCHAR(100) NOT NULL UNIQUE,
+                email VARCHAR(150) NOT NULL UNIQUE,
+                password_hash VARCHAR(255) NOT NULL,
+                ADMIN BOOLEAN DEFAULT FALSE,
+                PROFESSOR BOOLEAN DEFAULT FALSE,
+                REDATOR BOOLEAN DEFAULT FALSE,
+                solicitacao_redator ENUM('nenhuma', 'pendente', 'aprovado', 'reprovado') DEFAULT 'nenhuma',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        // Garante a existência das colunas solicitacao_redator e created_at caso a tabela users já existisse
+        try {
+            const [colsSol] = await pool.query("SHOW COLUMNS FROM users LIKE 'solicitacao_redator'");
+            if (colsSol.length === 0) {
+                await pool.query("ALTER TABLE users ADD COLUMN solicitacao_redator ENUM('nenhuma', 'pendente', 'aprovado', 'reprovado') DEFAULT 'nenhuma'");
+                console.log('Coluna "solicitacao_redator" adicionada à tabela "users".');
+            }
+
+            const [colsCreated] = await pool.query("SHOW COLUMNS FROM users LIKE 'created_at'");
+            if (colsCreated.length === 0) {
+                await pool.query("ALTER TABLE users ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
+                console.log('Coluna "created_at" adicionada à tabela "users".');
+            }
+        } catch (e) {
+            console.warn('Verificação de colunas em users:', e.message);
+        }
+
+        // 2. Tabela de Auditoria das Operações do BD (Heurística 9 - Apenas ADM)
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS auditoria (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                usuario_id INT DEFAULT NULL,
+                usuario_nome VARCHAR(100) DEFAULT NULL,
+                acao VARCHAR(50) NOT NULL,
+                tabela_afetada VARCHAR(50) NOT NULL,
+                registro_id INT DEFAULT NULL,
+                detalhes TEXT DEFAULT NULL,
+                ip VARCHAR(45) DEFAULT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                CONSTRAINT fk_auditoria_usuario FOREIGN KEY (usuario_id) 
+                    REFERENCES users(id) ON DELETE SET NULL
+            )
+        `);
+
+        // 3. Tabela de Amostras
         await pool.query(`
             CREATE TABLE IF NOT EXISTS amostras (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -56,6 +106,7 @@ async function initDatabase() {
             )
         `);
 
+        // 4. Tabela Relacional de Imagens (Cascade)
         await pool.query(`
             CREATE TABLE IF NOT EXISTS amostra_imagens (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -67,7 +118,7 @@ async function initDatabase() {
                     REFERENCES amostras(id) ON DELETE CASCADE
             )
         `);
-        console.log('Tabelas "amostras" e "amostra_imagens" verificadas/criadas com sucesso no banco.');
+        console.log('Tabelas "users", "auditoria", "amostras" e "amostra_imagens" verificadas/criadas com sucesso no banco.');
 
         // Se a tabela estiver vazia, popula com as 6 rochas e 6 minerais do acervo
         const [totalRows] = await pool.query('SELECT COUNT(*) as total FROM amostras');
@@ -137,17 +188,37 @@ function salvarImagemBase64(dataString, prefixo = 'amostra') {
     return `http://localhost:3000/uploads/${nomeArquivo}`;
 }
 
+// Registra logs de operações do banco de dados (Heurística 9 - Auditoria)
+async function registrarAuditoria(usuarioId, usuarioNome, acao, tabelaAfetada, registroId, detalhes, req = null) {
+    try {
+        let ip = null;
+        if (req) {
+            ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || null;
+            if (ip && ip.includes(',')) ip = ip.split(',')[0].trim();
+        }
+        await pool.query(
+            `INSERT INTO auditoria (usuario_id, usuario_nome, acao, tabela_afetada, registro_id, detalhes, ip)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [usuarioId || null, usuarioNome || 'Sistema', acao, tabelaAfetada, registroId || null, detalhes || '', ip]
+        );
+    } catch (err) {
+        console.warn('Aviso: Falha ao gravar log de auditoria no BD:', err.message);
+    }
+}
+
 // Verifica permissões do usuário no banco
 async function obterPermissoesUsuario(userId) {
     if (!userId) return null;
-    const [rows] = await pool.query('SELECT id, username, ADMIN, PROFESSOR, REDATOR FROM users WHERE id = ?', [userId]);
+    const [rows] = await pool.query('SELECT id, username, email, ADMIN, PROFESSOR, REDATOR, solicitacao_redator FROM users WHERE id = ?', [userId]);
     if (rows.length === 0) return null;
     return {
         id: rows[0].id,
         nome: rows[0].username,
+        email: rows[0].email,
         isAdmin: Boolean(rows[0].ADMIN),
         isProfessor: Boolean(rows[0].PROFESSOR),
-        isRedator: Boolean(rows[0].REDATOR)
+        isRedator: Boolean(rows[0].REDATOR),
+        solicitacaoRedator: rows[0].solicitacao_redator || 'nenhuma'
     };
 }
 
@@ -159,27 +230,66 @@ app.post('/api/registrar', async (req, res) => {
     try {
         const { name, email, password, isTeacher, isRedator } = req.body;
 
+        if (!name || !email || !password) {
+            return res.status(400).json({ sucesso: false, mensagem: 'Por favor, preencha todos os campos obrigatórios.' });
+        }
+
         const password_hash = await bcrypt.hash(password, 10);
 
+        // Se marcou que quer ser redator:
+        // O usuário NÃO ganha permissão de redator imediatamente (REDATOR = false).
+        // Ele é registrado com solicitacao_redator = 'pendente' para o ADM aprovar ou reprovar.
+        const querSerRedator = Boolean(isRedator);
+        const solicitacao = querSerRedator ? 'pendente' : 'nenhuma';
+        const redatorInicial = false; // Sempre falso até aprovação do ADM!
+
         const sql = `
-            INSERT INTO users (username, email, password_hash, PROFESSOR, REDATOR) 
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO users (username, email, password_hash, PROFESSOR, REDATOR, solicitacao_redator) 
+            VALUES (?, ?, ?, ?, ?, ?)
         `;
 
-        const values = [name, email, password_hash, isTeacher, isRedator];
+        const values = [name.trim(), email.trim(), password_hash, Boolean(isTeacher), redatorInicial, solicitacao];
         const [resultado] = await pool.query(sql, values);
 
-        res.json({ sucesso: true, mensagem: 'Usuário cadastrado com sucesso! ID: ' + resultado.insertId });
+        // Registra operação na auditoria
+        await registrarAuditoria(
+            resultado.insertId,
+            name.trim(),
+            'REGISTRO_USUARIO',
+            'users',
+            resultado.insertId,
+            querSerRedator
+                ? `Usuário cadastrado com solicitação PENDENTE de Redator (Vínculo docente: ${isTeacher ? 'Sim' : 'Não'})`
+                : `Usuário cadastrado como usuário padrão`,
+            req
+        );
+
+        const mensagemSucesso = querSerRedator
+            ? 'Usuário cadastrado com sucesso! Sua solicitação para atuar como Redator foi enviada para análise e aprovação do Administrador. Enquanto isso, seu acesso está liberado como usuário normal.'
+            : 'Usuário cadastrado com sucesso!';
+
+        res.status(201).json({
+            sucesso: true,
+            mensagem: mensagemSucesso,
+            id: resultado.insertId,
+            solicitacaoRedator: solicitacao
+        });
 
     } catch (erro) {
         console.error('Erro no registro:', erro);
-        res.status(500).json({ sucesso: false, mensagem: 'Erro ou usuário já existente.' });
+        if (erro.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({
+                sucesso: false,
+                mensagem: 'Este e-mail ou nome de usuário já está cadastrado no sistema. Tente fazer login.'
+            });
+        }
+        res.status(500).json({ sucesso: false, mensagem: 'Erro interno ao realizar cadastro no servidor.' });
     }
 });
 
 app.get('/api/usuarios', async (req, res) => {
     try {
-        const sql = 'SELECT id, username, email, ADMIN, PROFESSOR, REDATOR FROM users';
+        const sql = 'SELECT id, username, email, ADMIN, PROFESSOR, REDATOR, solicitacao_redator FROM users';
         const [usuarios] = await pool.query(sql);
         res.json(usuarios);
     } catch (erro) {
@@ -226,6 +336,17 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ sucesso: false, mensagem: 'E-mail ou senha incorretos.' });
         }
 
+        // Registrar auditoria de login
+        await registrarAuditoria(
+            user.id,
+            user.username,
+            'LOGIN',
+            'users',
+            user.id,
+            `Usuário ${user.username} realizou login com sucesso`,
+            req
+        );
+
         res.json({
             sucesso: true,
             mensagem: 'Login realizado com sucesso!',
@@ -235,7 +356,8 @@ app.post('/api/login', async (req, res) => {
                 email: user.email,
                 isAdmin: Boolean(user.ADMIN),
                 isProfessor: Boolean(user.PROFESSOR),
-                isRedator: Boolean(user.REDATOR)
+                isRedator: Boolean(user.REDATOR),
+                solicitacaoRedator: user.solicitacao_redator || 'nenhuma'
             }
         });
 
@@ -399,6 +521,17 @@ app.post('/api/amostras', async (req, res) => {
         if (url2) await pool.query(sqlImagem, [novoId, url2, 2]);
         if (url3) await pool.query(sqlImagem, [novoId, url3, 3]);
 
+        // Registra operação na auditoria (Heurística 9)
+        await registrarAuditoria(
+            user.id,
+            user.nome,
+            'CRIAR_AMOSTRA',
+            'amostras',
+            novoId,
+            `Amostra criada: "${nome.trim()}" (Categoria: ${categoria}, Tipo/Grupo: ${tipo_rocha || grupo_mineral || 'Geral'})`,
+            req
+        );
+
         res.status(201).json({
             sucesso: true,
             mensagem: 'Amostra cadastrada com sucesso!',
@@ -479,6 +612,17 @@ app.put('/api/amostras/:id', async (req, res) => {
         if (url2) await pool.query(sqlImagem, [id, url2, 2]);
         if (url3) await pool.query(sqlImagem, [id, url3, 3]);
 
+        // Registra auditoria
+        await registrarAuditoria(
+            user.id,
+            user.nome,
+            'EDITAR_AMOSTRA',
+            'amostras',
+            id,
+            `Amostra atualizada: "${nome ? nome.trim() : atual.nome}" (ID: ${id})`,
+            req
+        );
+
         res.json({
             sucesso: true,
             mensagem: 'Amostra atualizada com sucesso!'
@@ -505,6 +649,10 @@ app.delete('/api/amostras/:id', async (req, res) => {
             });
         }
 
+        // Obtém o nome da amostra antes de excluir para o log
+        const [amostraAlvo] = await pool.query('SELECT nome, categoria FROM amostras WHERE id = ?', [id]);
+        const nomeAmostra = amostraAlvo.length > 0 ? amostraAlvo[0].nome : `ID ${id}`;
+
         // 2. Busca imagens vinculadas para limpar arquivos físicos de uploads locais
         const [imgs] = await pool.query('SELECT url FROM amostra_imagens WHERE amostra_id = ?', [id]);
         for (const img of imgs) {
@@ -517,23 +665,227 @@ app.delete('/api/amostras/:id', async (req, res) => {
             }
         }
 
-        // 3. Exclui a amostra do banco.
-        // A chave estrangeira fk_amostra_imagens_amostra com ON DELETE CASCADE
-        // garante a remoção em cascata automática de todos os registros filhos em amostra_imagens.
+        // 3. Exclui a amostra do banco (CASCADE exclui amostra_imagens automaticamente)
         const [resultado] = await pool.query('DELETE FROM amostras WHERE id = ?', [id]);
 
         if (resultado.affectedRows === 0) {
             return res.status(404).json({ sucesso: false, mensagem: 'Amostra não encontrada para exclusão.' });
         }
 
+        // Registra operação na auditoria
+        await registrarAuditoria(
+            user.id,
+            user.nome,
+            'EXCLUIR_AMOSTRA',
+            'amostras',
+            id,
+            `Amostra excluída: "${nomeAmostra}" (ID: ${id}) e fotos associadas`,
+            req
+        );
+
         res.json({
             sucesso: true,
-            mensagem: 'Amostra e dados relacionados excluídos do banco de dados em cascata com sucesso!'
+            mensagem: 'Amostra e fotografias associadas excluídas com sucesso!'
         });
 
     } catch (erro) {
         console.error('Erro ao apagar amostra:', erro);
         res.status(500).json({ sucesso: false, mensagem: 'Erro interno ao excluir amostra.' });
+    }
+});
+
+// ==========================================
+// ROTAS DE ADMINISTRAÇÃO (AUDITORIA E REDATORES) - SOMENTE ADMIN
+// ==========================================
+
+async function validarAdmin(req, res) {
+    const usuarioId = req.headers['x-usuario-id'] || req.query.usuarioId || req.body?.usuarioId;
+    if (!usuarioId) {
+        res.status(401).json({ sucesso: false, mensagem: 'Usuário não autenticado.' });
+        return null;
+    }
+    const user = await obterPermissoesUsuario(usuarioId);
+    if (!user || !user.isAdmin) {
+        res.status(403).json({ sucesso: false, mensagem: 'Acesso negado: Requer privilégios de Administrador.' });
+        return null;
+    }
+    return user;
+}
+
+// 1. Logs de Auditoria do BD (Heurística 9 - Visível apenas para o ADM)
+app.get('/api/admin/auditoria', async (req, res) => {
+    try {
+        const admin = await validarAdmin(req, res);
+        if (!admin) return;
+
+        const [logs] = await pool.query(`
+            SELECT id, usuario_id, usuario_nome, acao, tabela_afetada, registro_id, detalhes, ip, created_at 
+            FROM auditoria 
+            ORDER BY id DESC 
+            LIMIT 500
+        `);
+
+        res.json({ sucesso: true, logs });
+    } catch (erro) {
+        console.error('Erro ao buscar auditoria:', erro);
+        res.status(500).json({ sucesso: false, mensagem: 'Erro interno ao consultar logs de auditoria.' });
+    }
+});
+
+// 2. Consulta de Redatores e Solicitações de Cadastro
+app.get('/api/admin/redatores', async (req, res) => {
+    try {
+        const admin = await validarAdmin(req, res);
+        if (!admin) return;
+
+        // Verifica dinamicamente se a coluna created_at existe na tabela users para não quebrar tabelas antigas
+        let campoData = 'NULL AS created_at';
+        try {
+            const [cols] = await pool.query("SHOW COLUMNS FROM users LIKE 'created_at'");
+            if (cols.length > 0) {
+                campoData = 'created_at';
+            }
+        } catch (e) {
+            campoData = 'NULL AS created_at';
+        }
+
+        // Solicitações pendentes para aprovação
+        const [pendentes] = await pool.query(`
+            SELECT id, username, email, PROFESSOR, REDATOR, solicitacao_redator, ${campoData} 
+            FROM users 
+            WHERE solicitacao_redator = 'pendente' 
+            ORDER BY id DESC
+        `);
+
+        // Redatores com permissão ativa
+        const [redatores] = await pool.query(`
+            SELECT id, username, email, PROFESSOR, REDATOR, solicitacao_redator, ${campoData} 
+            FROM users 
+            WHERE REDATOR = 1 
+            ORDER BY username ASC
+        `);
+
+        // Histórico de usuários com solicitação reprovada
+        const [reprovados] = await pool.query(`
+            SELECT id, username, email, PROFESSOR, REDATOR, solicitacao_redator, ${campoData} 
+            FROM users 
+            WHERE solicitacao_redator = 'reprovado' 
+            ORDER BY id DESC
+        `);
+
+        res.json({ sucesso: true, pendentes, redatores, reprovados });
+    } catch (erro) {
+        console.error('Erro ao listar redatores:', erro);
+        res.status(500).json({ sucesso: false, mensagem: 'Erro interno ao buscar lista de redatores: ' + erro.message });
+    }
+});
+
+// 3. Aprovar Redator (Ganha a permissão de redator)
+app.post('/api/admin/redatores/:id/aprovar', async (req, res) => {
+    try {
+        const admin = await validarAdmin(req, res);
+        if (!admin) return;
+
+        const { id } = req.params;
+        const [rows] = await pool.query('SELECT id, username, email FROM users WHERE id = ?', [id]);
+        if (rows.length === 0) {
+            return res.status(404).json({ sucesso: false, mensagem: 'Usuário não encontrado.' });
+        }
+        const userAlvo = rows[0];
+
+        // Atualiza para Redator = 1 e solicitacao = 'aprovado'
+        await pool.query("UPDATE users SET REDATOR = 1, solicitacao_redator = 'aprovado' WHERE id = ?", [id]);
+
+        // Registra na auditoria
+        await registrarAuditoria(
+            admin.id,
+            admin.nome,
+            'APROVAR_REDATOR',
+            'users',
+            id,
+            `Administrador ${admin.nome} APROVOU o usuário ${userAlvo.username} (${userAlvo.email}) como Redator`,
+            req
+        );
+
+        res.json({
+            sucesso: true,
+            mensagem: `Usuário "${userAlvo.username}" aprovado com sucesso! Permissão de Redator concedida.`
+        });
+    } catch (erro) {
+        console.error('Erro ao aprovar redator:', erro);
+        res.status(500).json({ sucesso: false, mensagem: 'Erro interno ao aprovar redator.' });
+    }
+});
+
+// 4. Reprovar Redator (Usuário continua registrado, mas como usuário normal)
+app.post('/api/admin/redatores/:id/reprovar', async (req, res) => {
+    try {
+        const admin = await validarAdmin(req, res);
+        if (!admin) return;
+
+        const { id } = req.params;
+        const [rows] = await pool.query('SELECT id, username, email FROM users WHERE id = ?', [id]);
+        if (rows.length === 0) {
+            return res.status(404).json({ sucesso: false, mensagem: 'Usuário não encontrado.' });
+        }
+        const userAlvo = rows[0];
+
+        // Atualiza para Redator = 0 e solicitacao = 'reprovado'
+        await pool.query("UPDATE users SET REDATOR = 0, solicitacao_redator = 'reprovado' WHERE id = ?", [id]);
+
+        // Registra na auditoria
+        await registrarAuditoria(
+            admin.id,
+            admin.nome,
+            'REPROVAR_REDATOR',
+            'users',
+            id,
+            `Administrador ${admin.nome} REPROVOU a solicitação de redator de ${userAlvo.username} (${userAlvo.email}). Usuário mantido com permissão comum.`,
+            req
+        );
+
+        res.json({
+            sucesso: true,
+            mensagem: `Solicitação do usuário "${userAlvo.username}" reprovada. O usuário permanece registrado no acervo com acesso padrão.`
+        });
+    } catch (erro) {
+        console.error('Erro ao reprovar redator:', erro);
+        res.status(500).json({ sucesso: false, mensagem: 'Erro interno ao reprovar redator.' });
+    }
+});
+
+// 5. Revogar Permissão de Redator Ativo
+app.post('/api/admin/redatores/:id/revogar', async (req, res) => {
+    try {
+        const admin = await validarAdmin(req, res);
+        if (!admin) return;
+
+        const { id } = req.params;
+        const [rows] = await pool.query('SELECT id, username, email FROM users WHERE id = ?', [id]);
+        if (rows.length === 0) {
+            return res.status(404).json({ sucesso: false, mensagem: 'Usuário não encontrado.' });
+        }
+        const userAlvo = rows[0];
+
+        await pool.query("UPDATE users SET REDATOR = 0, solicitacao_redator = 'nenhuma' WHERE id = ?", [id]);
+
+        await registrarAuditoria(
+            admin.id,
+            admin.nome,
+            'REVOGAR_REDATOR',
+            'users',
+            id,
+            `Administrador ${admin.nome} REVOGOU o acesso de redator do usuário ${userAlvo.username}`,
+            req
+        );
+
+        res.json({
+            sucesso: true,
+            mensagem: `Permissão de redator revogada do usuário "${userAlvo.username}".`
+        });
+    } catch (erro) {
+        console.error('Erro ao revogar redator:', erro);
+        res.status(500).json({ sucesso: false, mensagem: 'Erro interno ao revogar redator.' });
     }
 });
 
